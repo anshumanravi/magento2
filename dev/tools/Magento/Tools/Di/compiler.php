@@ -6,10 +6,8 @@
 require __DIR__ . '/../../../bootstrap.php';
 
 $rootDir = realpath(__DIR__ . '/../../../../../');
-use Magento\Framework\Api\Code\Generator\DataBuilder;
 use Magento\Framework\Api\Code\Generator\Mapper;
 use Magento\Framework\Api\Code\Generator\SearchResults;
-use Magento\Framework\Api\Code\Generator\SearchResultsBuilder;
 use Magento\Framework\Autoload\AutoloaderRegistry;
 use Magento\Framework\Interception\Code\Generator\Interceptor;
 use Magento\Framework\ObjectManager\Code\Generator\Converter;
@@ -17,6 +15,8 @@ use Magento\Framework\ObjectManager\Code\Generator\Factory;
 use Magento\Framework\ObjectManager\Code\Generator\Proxy;
 use Magento\Framework\ObjectManager\Code\Generator\Repository;
 use Magento\Framework\ObjectManager\Code\Generator\Persistor;
+use Magento\Framework\Api\Code\Generator\ExtensionAttributesGenerator;
+use Magento\Framework\Api\Code\Generator\ExtensionAttributesInterfaceGenerator;
 use Magento\Tools\Di\Code\Scanner;
 use Magento\Tools\Di\Compiler\Log\Log;
 use Magento\Tools\Di\Compiler\Log\Writer;
@@ -32,12 +32,24 @@ try {
             'extra-classes-file=s' => 'path to file with extra proxies and factories to generate',
             'generation=s'         => 'absolute path to generated classes, <magento_root>/var/generation by default',
             'di=s'                 => 'absolute path to DI definitions directory, <magento_root>/var/di by default',
+            'exclude-pattern=s'    => 'allows to exclude Paths from compilation (default is #[\\\\/]m1[\\\\/]#i)',
         ]
     );
     $opt->parse();
 
     $generationDir = $opt->getOption('generation') ? $opt->getOption('generation') : $rootDir . '/var/generation';
     $diDir = $opt->getOption('di') ? $opt->getOption('di') : $rootDir . '/var/di';
+
+    $testExcludePatterns = [
+        "#^$rootDir/app/code/[\\w]+/[\\w]+/Test#",
+        "#^$rootDir/lib/internal/[\\w]+/[\\w]+/([\\w]+/)?Test#",
+        "#^$rootDir/setup/src/Magento/Setup/Test#",
+        "#^$rootDir/dev/tools/Magento/Tools/[\\w]+/Test#"
+    ];
+    $fileExcludePatterns = $opt->getOption('exclude-pattern') ?
+        [$opt->getOption('exclude-pattern')] : ['#[\\\\/]M1[\\\\/]#i'];
+    $fileExcludePatterns = array_merge($fileExcludePatterns, $testExcludePatterns);
+
     $relationsFile = $diDir . '/relations.ser';
     $pluginDefFile = $diDir . '/plugins.ser';
 
@@ -60,7 +72,7 @@ try {
     $filePatterns = ['php' => '/.*\.php$/', 'di' => '/\/etc\/([a-zA-Z_]*\/di|di)\.xml$/'];
     $codeScanDir = realpath($rootDir . '/app');
     $directoryScanner = new Scanner\DirectoryScanner();
-    $files = $directoryScanner->scan($codeScanDir, $filePatterns);
+    $files = $directoryScanner->scan($codeScanDir, $filePatterns, $fileExcludePatterns);
     $files['additional'] = [$opt->getOption('extra-classes-file')];
     $entities = [];
 
@@ -84,19 +96,24 @@ try {
     $generator = new \Magento\Framework\Code\Generator(
         $generatorIo,
         [
-            DataBuilder::ENTITY_TYPE => 'Magento\Framework\Api\Code\Generator\DataBuilder',
             Interceptor::ENTITY_TYPE => 'Magento\Framework\Interception\Code\Generator\Interceptor',
-            SearchResultsBuilder::ENTITY_TYPE => 'Magento\Framework\Api\Code\Generator\SearchResultsBuilder',
-            DataBuilder::ENTITY_TYPE_BUILDER  => 'Magento\Framework\Api\Code\Generator\DataBuilder',
             Proxy::ENTITY_TYPE => 'Magento\Framework\ObjectManager\Code\Generator\Proxy',
             Factory::ENTITY_TYPE => 'Magento\Framework\ObjectManager\Code\Generator\Factory',
             Mapper::ENTITY_TYPE => 'Magento\Framework\Api\Code\Generator\Mapper',
             Persistor::ENTITY_TYPE => 'Magento\Framework\ObjectManager\Code\Generator\Persistor',
             Repository::ENTITY_TYPE => 'Magento\Framework\ObjectManager\Code\Generator\Repository',
             Converter::ENTITY_TYPE => 'Magento\Framework\ObjectManager\Code\Generator\Converter',
-            SearchResults::ENTITY_TYPE => 'Magento\Framework\Api\Code\Generator\SearchResults'
+            SearchResults::ENTITY_TYPE => 'Magento\Framework\Api\Code\Generator\SearchResults',
+            ExtensionAttributesInterfaceGenerator::ENTITY_TYPE =>
+                'Magento\Framework\Api\Code\Generator\ExtensionAttributesInterfaceGenerator',
+            ExtensionAttributesGenerator::ENTITY_TYPE =>
+                'Magento\Framework\Api\Code\Generator\ExtensionAttributesGenerator'
         ]
     );
+    /** Initialize object manager for code generation based on configs */
+    $magentoObjectManagerFactory = \Magento\Framework\App\Bootstrap::createObjectManagerFactory(BP, $_SERVER);
+    $objectManager = $magentoObjectManagerFactory->create($_SERVER);
+    $generator->setObjectManager($objectManager);
 
     $generatorAutoloader = new \Magento\Framework\Code\Generator\Autoloader($generator);
     spl_autoload_register([$generatorAutoloader, 'load']);
@@ -144,11 +161,13 @@ try {
     $validator = new \Magento\Framework\Code\Validator();
     $validator->add(new \Magento\Framework\Code\Validator\ConstructorIntegrity());
     $validator->add(new \Magento\Framework\Code\Validator\ContextAggregation());
+    $classesScanner = new \Magento\Tools\Di\Code\Reader\ClassesScanner();
+    $classesScanner->addExcludePatterns($fileExcludePatterns);
 
-    $directoryInstancesNamesList = new \Magento\Tools\Di\Code\Reader\InstancesNamesList\Directory(
+    $directoryInstancesNamesList = new \Magento\Tools\Di\Code\Reader\Decorator\Directory(
         $log,
         new \Magento\Framework\Code\Reader\ClassReader(),
-        new \Magento\Tools\Di\Code\Reader\ClassesScanner(),
+        $classesScanner,
         $validator,
         $generationDir
     );
@@ -223,6 +242,12 @@ try {
     if ($log->hasError()) {
         exit(1);
     }
+
+    echo 'On *nix systems, verify the Magento application has permissions to modify files created by the compiler'
+        . ' in the "var" directory. For instance, if you run the Magento application using Apache,'
+        . ' the owner of the files in the "var" directory should be the Apache user (example command:'
+        . ' "chown -R www-data:www-data <MAGENTO_ROOT>/var" where MAGENTO_ROOT is the Magento root directory).' . "\n";
+
 } catch (Zend_Console_Getopt_Exception $e) {
     echo $e->getUsageMessage();
     echo 'Please, use quotes(") for wrapping strings.' . "\n";

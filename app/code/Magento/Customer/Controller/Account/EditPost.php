@@ -11,7 +11,6 @@ use Magento\Customer\Api\AccountManagementInterface;
 use Magento\Customer\Api\CustomerRepositoryInterface;
 use Magento\Customer\Model\CustomerExtractor;
 use Magento\Customer\Model\Session;
-use Magento\Framework\Controller\Result\RedirectFactory;
 use Magento\Framework\View\Result\PageFactory;
 use Magento\Framework\App\Action\Context;
 use Magento\Framework\Exception\AuthenticationException;
@@ -37,7 +36,6 @@ class EditPost extends \Magento\Customer\Controller\Account
     /**
      * @param Context $context
      * @param Session $customerSession
-     * @param RedirectFactory $resultRedirectFactory
      * @param PageFactory $resultPageFactory
      * @param AccountManagementInterface $customerAccountManagement
      * @param CustomerRepositoryInterface $customerRepository
@@ -48,7 +46,6 @@ class EditPost extends \Magento\Customer\Controller\Account
     public function __construct(
         Context $context,
         Session $customerSession,
-        RedirectFactory $resultRedirectFactory,
         PageFactory $resultPageFactory,
         AccountManagementInterface $customerAccountManagement,
         CustomerRepositoryInterface $customerRepository,
@@ -59,7 +56,7 @@ class EditPost extends \Magento\Customer\Controller\Account
         $this->customerRepository = $customerRepository;
         $this->formKeyValidator = $formKeyValidator;
         $this->customerExtractor = $customerExtractor;
-        parent::__construct($context, $customerSession, $resultRedirectFactory, $resultPageFactory);
+        parent::__construct($context, $customerSession, $resultPageFactory);
     }
 
     /**
@@ -81,6 +78,9 @@ class EditPost extends \Magento\Customer\Controller\Account
             $customerId = $this->_getSession()->getCustomerId();
             $customer = $this->customerExtractor->extract('customer_account_edit', $this->_request);
             $customer->setId($customerId);
+            if ($customer->getAddresses() == null) {
+                $customer->setAddresses($this->customerRepository->getById($customerId)->getAddresses());
+            }
 
             if ($this->getRequest()->getParam('change_password')) {
                 $currPass = $this->getRequest()->getPost('current_password');

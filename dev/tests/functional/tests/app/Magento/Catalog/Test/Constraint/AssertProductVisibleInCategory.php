@@ -17,10 +17,6 @@ use Magento\Mtf\Fixture\FixtureInterface;
  */
 class AssertProductVisibleInCategory extends AbstractConstraint
 {
-    /* tags */
-    const SEVERITY = 'low';
-    /* end tags */
-
     /**
      * Displays an error message
      *
@@ -56,9 +52,9 @@ class AssertProductVisibleInCategory extends AbstractConstraint
         $cmsIndex->open();
         $cmsIndex->getTopmenu()->selectCategoryByName($categoryName);
 
-        $isProductVisible = $catalogCategoryView->getListProductBlock()->isProductVisible($product->getName());
+        $isProductVisible = $catalogCategoryView->getListProductBlock()->getProductItem($product)->isVisible();
         while (!$isProductVisible && $catalogCategoryView->getBottomToolbar()->nextPage()) {
-            $isProductVisible = $catalogCategoryView->getListProductBlock()->isProductVisible($product->getName());
+            $isProductVisible = $catalogCategoryView->getListProductBlock()->getProductItem($product)->isVisible();
         }
 
         if (($product->getVisibility() === 'Search') || ($this->getStockStatus($product) === 'Out of Stock')) {

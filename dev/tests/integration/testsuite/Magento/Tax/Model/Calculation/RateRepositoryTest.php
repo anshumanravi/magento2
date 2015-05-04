@@ -180,7 +180,7 @@ class RateRepositoryTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @expectedException \Magento\Framework\Exception\InputException
+     * @expectedException \Magento\Framework\Exception\AlreadyExistsException
      * @expectedExceptionMessage Code already exists.
      * @magentoDbIsolation enabled
      */
@@ -546,7 +546,7 @@ class RateRepositoryTest extends \PHPUnit_Framework_TestCase
         foreach ($filters as $filter) {
             $searchBuilder->addFilter([$filter]);
         }
-        if (!is_null($filterGroup)) {
+        if ($filterGroup !== null) {
             $searchBuilder->addFilter($filterGroup);
         }
         $searchCriteria = $searchBuilder->create();

@@ -15,7 +15,6 @@ use Magento\Mtf\Client\Element\SimpleElement;
 use Magento\Catalog\Test\Block\Adminhtml\Product\Edit\ProductTab;
 use Magento\Mtf\Client\Element;
 use Magento\Mtf\Client\Locator;
-use Magento\Mtf\Fixture\DataFixture;
 use Magento\Mtf\Fixture\FixtureInterface;
 use Magento\Mtf\Fixture\InjectableFixture;
 use Magento\Catalog\Test\Fixture\Category;
@@ -100,6 +99,7 @@ class ProductForm extends FormTabs
      */
     public function fill(FixtureInterface $product, SimpleElement $element = null, FixtureInterface $category = null)
     {
+        $this->waitPageToLoad();
         $dataConfig = $product->getDataConfig();
         $typeId = isset($dataConfig['type_id']) ? $dataConfig['type_id'] : null;
 
@@ -113,11 +113,6 @@ class ProductForm extends FormTabs
         } else {
             $tabs = $this->getFieldsByTabs($product);
 
-            //TODO: Remove after old product fixture will be deleted
-            if (null === $category && $product instanceof DataFixture) {
-                $categories = $product->getCategories();
-                $category = reset($categories);
-            }
             if ($category) {
                 $tabs['product-details']['category_ids']['value'] = $category->getName();
             }
@@ -147,7 +142,7 @@ class ProductForm extends FormTabs
             /** @var \Magento\Catalog\Test\Block\Adminhtml\Product\Edit\Tab\ProductDetails $tab */
             $tab = $this->openTab($tabName);
             $tab->addNewAttribute($tabName);
-            $this->fillAttributeForm($attribute);
+            $this->getAttributeForm()->fill($attribute);
         }
     }
 
@@ -166,6 +161,18 @@ class ProductForm extends FormTabs
     }
 
     /**
+     * Open tab.
+     *
+     * @param string $tabName
+     * @return Tab
+     */
+    public function openTab($tabName)
+    {
+        $this->showAdvancedSettings();
+        return parent::openTab($tabName);
+    }
+
+    /**
      * Show Advanced Setting.
      *
      * @return void
@@ -180,15 +187,27 @@ class ProductForm extends FormTabs
     }
 
     /**
-     * Open tab.
+     * Wait page to load.
      *
-     * @param string $tabName
-     * @return Tab
+     * @return void
      */
-    public function openTab($tabName)
+    protected function waitPageToLoad()
     {
-        $this->showAdvancedSettings();
-        return parent::openTab($tabName);
+        $browser = $this->browser;
+        $element = $this->advancedSettingContent;
+        $advancedSettingTrigger = $this->advancedSettingTrigger;
+
+        $this->_rootElement->waitUntil(
+            function () use ($browser, $advancedSettingTrigger) {
+                return $browser->find($advancedSettingTrigger)->isVisible() == true ? true : null;
+            }
+        );
+
+        $this->_rootElement->waitUntil(
+            function () use ($browser, $element) {
+                return $browser->find($element)->isVisible() == false ? true : null;
+            }
+        );
     }
 
     /**
@@ -284,18 +303,6 @@ class ProductForm extends FormTabs
         }
 
         return $data;
-    }
-
-    /**
-     * Fill product attribute form.
-     *
-     * @param CatalogProductAttribute $productAttribute
-     * @return void
-     */
-    public function fillAttributeForm(CatalogProductAttribute $productAttribute)
-    {
-        $attributeForm = $this->getAttributeForm();
-        $attributeForm->fill($productAttribute);
     }
 
     /**

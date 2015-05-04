@@ -65,7 +65,7 @@ class Filter extends \Magento\Framework\Filter\Template
      * Core store config
      * Variable factory
      *
-     * @var \Magento\Core\Model\VariableFactory
+     * @var \Magento\Variable\Model\VariableFactory
      */
     protected $_variableFactory;
 
@@ -116,7 +116,7 @@ class Filter extends \Magento\Framework\Filter\Template
      * @param \Magento\Framework\Escaper $escaper
      * @param \Magento\Framework\View\Asset\Repository $assetRepo
      * @param \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig
-     * @param \Magento\Core\Model\VariableFactory $coreVariableFactory
+     * @param \Magento\Variable\Model\VariableFactory $coreVariableFactory
      * @param \Magento\Store\Model\StoreManagerInterface $storeManager
      * @param \Magento\Framework\View\LayoutInterface $layout
      * @param \Magento\Framework\View\LayoutFactory $layoutFactory
@@ -132,7 +132,7 @@ class Filter extends \Magento\Framework\Filter\Template
         \Magento\Framework\Escaper $escaper,
         \Magento\Framework\View\Asset\Repository $assetRepo,
         \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig,
-        \Magento\Core\Model\VariableFactory $coreVariableFactory,
+        \Magento\Variable\Model\VariableFactory $coreVariableFactory,
         \Magento\Store\Model\StoreManagerInterface $storeManager,
         \Magento\Framework\View\LayoutInterface $layout,
         \Magento\Framework\View\LayoutFactory $layoutFactory,
@@ -526,7 +526,7 @@ class Filter extends \Magento\Framework\Filter\Template
      * also allow additional parameter "store"
      *
      * @param string[] $construction
-     * @throws \Magento\Framework\Mail\Exception
+     * @throws \Magento\Framework\Exception\MailException
      * @return string
      */
     public function protocolDirective($construction)
@@ -537,7 +537,9 @@ class Filter extends \Magento\Framework\Filter\Template
             try {
                 $store = $this->_storeManager->getStore($params['store']);
             } catch (\Exception $e) {
-                throw new \Magento\Framework\Mail\Exception(__('Requested invalid store "%1"', $params['store']));
+                throw new \Magento\Framework\Exception\MailException(
+                    __('Requested invalid store "%1"', $params['store'])
+                );
             }
         }
         $isSecure = $this->_storeManager->getStore($store)->isCurrentlySecure();
@@ -592,8 +594,8 @@ class Filter extends \Magento\Framework\Filter\Template
                 $params['code']
             );
             $mode = $this->_plainTemplateMode
-                ? \Magento\Core\Model\Variable::TYPE_TEXT
-                : \Magento\Core\Model\Variable::TYPE_HTML;
+                ? \Magento\Variable\Model\Variable::TYPE_TEXT
+                : \Magento\Variable\Model\Variable::TYPE_HTML;
             $value = $variable->getValue($mode);
             if ($value) {
                 $customVarValue = $value;

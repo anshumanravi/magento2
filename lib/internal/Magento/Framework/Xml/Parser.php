@@ -23,6 +23,11 @@ class Parser
     protected $_content = [];
 
     /**
+     * @var boolean
+     */
+    protected $errorHandlerIsActive = false;
+
+    /**
      *
      */
     public function __construct()
@@ -30,6 +35,16 @@ class Parser
         $this->_dom = new \DOMDocument();
         $this->_currentDom = $this->_dom;
         return $this;
+    }
+
+    /**
+     * Initializes error handler
+     *
+     * @return void
+     */
+    public function initErrorHandler()
+    {
+        $this->errorHandlerIsActive = true;
     }
 
     /**
@@ -132,10 +147,46 @@ class Parser
     /**
      * @param string $string
      * @return $this
+     * @throws \Magento\Framework\Exception\LocalizedException
      */
     public function loadXML($string)
     {
-        $this->getDom()->loadXML($string);
+        if ($this->errorHandlerIsActive) {
+            set_error_handler([$this, 'errorHandler']);
+        }
+
+        try {
+            $this->getDom()->loadXML($string);
+        } catch (\Magento\Framework\Exception\LocalizedException $e) {
+            restore_error_handler();
+            throw new \Magento\Framework\Exception\LocalizedException(
+                new \Magento\Framework\Phrase($e->getMessage()),
+                $e
+            );
+        }
+
+        if ($this->errorHandlerIsActive) {
+            restore_error_handler();
+        }
+
         return $this;
+    }
+
+    /**
+     * Custom XML lib error handler
+     *
+     * @param int $errorNo
+     * @param string $errorStr
+     * @param string $errorFile
+     * @param int $errorLine
+     * @throws \Magento\Framework\Exception\LocalizedException
+     * @return void
+     */
+    public function errorHandler($errorNo, $errorStr, $errorFile, $errorLine)
+    {
+        if ($errorNo != 0) {
+            $message = "{$errorStr} in {$errorFile} on line {$errorLine}";
+            throw new \Magento\Framework\Exception\LocalizedException(new \Magento\Framework\Phrase($message));
+        }
     }
 }

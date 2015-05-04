@@ -44,8 +44,6 @@ class LayoutFilesTest extends \PHPUnit_Framework_TestCase
                     continue;
                 }
                 $this->_argInterpreter->evaluate($argumentData);
-            } catch (\Magento\Framework\Data\Argument\MissingOptionalValueException $e) {
-                // Argument value is missing in the testing environment, but it's optional, so no big deal
             } catch (\Exception $e) {
                 $this->fail($e->getMessage());
             }
@@ -60,7 +58,7 @@ class LayoutFilesTest extends \PHPUnit_Framework_TestCase
         $areas = ['adminhtml', 'frontend', 'email'];
         $data = [];
         foreach ($areas as $area) {
-            $layoutFiles = \Magento\Framework\Test\Utility\Files::init()->getLayoutFiles(['area' => $area], false);
+            $layoutFiles = \Magento\Framework\App\Utility\Files::init()->getLayoutFiles(['area' => $area], false);
             foreach ($layoutFiles as $layoutFile) {
                 $data[substr($layoutFile, strlen(BP))] = [$area, $layoutFile];
             }

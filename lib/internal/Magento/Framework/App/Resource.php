@@ -7,9 +7,10 @@
  */
 namespace Magento\Framework\App;
 
-use Magento\Framework\App\DeploymentConfig\DbConfig;
+use Magento\Framework\App\DeploymentConfig;
 use Magento\Framework\App\Resource\ConfigInterface as ResourceConfigInterface;
 use Magento\Framework\Model\Resource\Type\Db\ConnectionFactoryInterface;
+use Magento\Framework\Config\ConfigOptionsList;
 
 class Resource
 {
@@ -18,8 +19,6 @@ class Resource
     const AUTO_UPDATE_NEVER = -1;
 
     const AUTO_UPDATE_ALWAYS = 1;
-
-    const PARAM_TABLE_PREFIX = 'db/table_prefix';
 
     const DEFAULT_READ_RESOURCE = 'core_read';
 
@@ -90,16 +89,26 @@ class Resource
     public function getConnection($resourceName)
     {
         $connectionName = $this->_config->getConnectionName($resourceName);
+        return $this->getConnectionByName($connectionName);
+    }
+
+    /**
+     * Retrieve connection by $connectionName
+     *
+     * @param string $connectionName
+     * @return bool|\Magento\Framework\DB\Adapter\AdapterInterface
+     */
+    public function getConnectionByName($connectionName)
+    {
         if (isset($this->_connections[$connectionName])) {
             return $this->_connections[$connectionName];
         }
 
-        $dbInfo = $this->deploymentConfig->getSegment(DbConfig::CONFIG_KEY);
+        $dbInfo = $this->deploymentConfig->getConfigData(ConfigOptionsList::KEY_DB);
         if (null === $dbInfo) {
             return false;
         }
-        $dbConfig = new DbConfig($dbInfo);
-        $connectionConfig = $dbConfig->getConnection($connectionName);
+        $connectionConfig = $dbInfo['connection'][$connectionName];
         if ($connectionConfig) {
             $connection = $this->_connectionFactory->create($connectionConfig);
         }
@@ -115,9 +124,10 @@ class Resource
      * Get resource table name, validated by db adapter
      *
      * @param   string|string[] $modelEntity
+     * @param   string $connectionName
      * @return  string
      */
-    public function getTableName($modelEntity)
+    public function getTableName($modelEntity, $connectionName = self::DEFAULT_READ_RESOURCE)
     {
         $tableSuffix = null;
         if (is_array($modelEntity)) {
@@ -139,7 +149,7 @@ class Resource
         if ($tableSuffix) {
             $tableName .= '_' . $tableSuffix;
         }
-        return $this->getConnection(self::DEFAULT_READ_RESOURCE)->getTableName($tableName);
+        return $this->getConnection($connectionName)->getTableName($tableName);
     }
 
     /**
@@ -221,7 +231,9 @@ class Resource
     private function getTablePrefix()
     {
         if (null === $this->_tablePrefix) {
-            $this->_tablePrefix = (string)$this->deploymentConfig->get(self::PARAM_TABLE_PREFIX);
+            $this->_tablePrefix = (string)$this->deploymentConfig->get(
+                ConfigOptionsList::CONFIG_PATH_DB_PREFIX
+            );
         }
         return $this->_tablePrefix;
     }

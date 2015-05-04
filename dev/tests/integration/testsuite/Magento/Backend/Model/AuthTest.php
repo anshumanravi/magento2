@@ -5,6 +5,8 @@
  */
 namespace Magento\Backend\Model;
 
+use Magento\Framework\Exception\AuthenticationException;
+
 /**
  * Test class for \Magento\Backend\Model\Auth.
  *
@@ -28,11 +30,22 @@ class AuthTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @expectedException \Magento\Backend\Model\Auth\Exception
+     * @dataProvider getLoginDataProvider
+     * @param string $userName
+     * @param string $password
+     * @expectedException \Magento\Framework\Exception\AuthenticationException
      */
-    public function testLoginFailed()
+    public function testLoginFailed($userName, $password)
     {
-        $this->_model->login('not_exists', 'not_exists');
+        $this->_model->login($userName, $password);
+    }
+
+    public function getLoginDataProvider()
+    {
+        return [
+            'Invalid credentials' => ['not_exists', 'not_exists'],
+            'Empty credentials' => ['', 'not_exists']
+        ];
     }
 
     public function testSetGetAuthStorage()
@@ -48,7 +61,7 @@ class AuthTest extends \PHPUnit_Framework_TestCase
         try {
             $this->_model->setAuthStorage($incorrectStorage);
             $this->fail('Incorrect authentication storage setted.');
-        } catch (\Magento\Backend\Model\Auth\Exception $e) {
+        } catch (AuthenticationException $e) {
             // in case of exception - Auth works correct
             $this->assertNotEmpty($e->getMessage());
         }
@@ -75,17 +88,13 @@ class AuthTest extends \PHPUnit_Framework_TestCase
      */
     public function testLogout()
     {
-        $this->markTestIncomplete('MAGETWO-17021');
         $this->_model->login(
             \Magento\TestFramework\Bootstrap::ADMIN_NAME,
             \Magento\TestFramework\Bootstrap::ADMIN_PASSWORD
         );
         $this->assertNotEmpty($this->_model->getAuthStorage()->getData());
-        $cookie = \Magento\TestFramework\Helper\Bootstrap::getObjectManager()->get('Magento\Framework\Stdlib\Cookie');
-        $cookie->set($this->_model->getAuthStorage()->getName(), 'session_id');
         $this->_model->logout();
         $this->assertEmpty($this->_model->getAuthStorage()->getData());
-        $this->assertEmpty($cookie->get($this->_model->getAuthStorage()->getName()));
     }
 
     /**

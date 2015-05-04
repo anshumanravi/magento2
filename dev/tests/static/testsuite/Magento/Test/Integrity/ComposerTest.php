@@ -6,9 +6,9 @@
 namespace Magento\Test\Integrity;
 
 use Magento\Framework\Composer\MagentoComponent;
-use Magento\Framework\Test\Utility\Files;
+use Magento\Framework\App\Utility\Files;
 use Magento\Framework\Shell;
-use Magento\Framework\Exception;
+use Magento\Framework\Exception\LocalizedException;
 
 /**
  * A test that enforces validity of composer.json files and any other conventions in Magento components
@@ -59,7 +59,7 @@ class ComposerTest extends \PHPUnit_Framework_TestCase
 
     public function testValidComposerJson()
     {
-        $invoker = new \Magento\Framework\Test\Utility\AggregateInvoker($this);
+        $invoker = new \Magento\Framework\App\Utility\AggregateInvoker($this);
         $invoker(
         /**
          * @param string $dir
@@ -84,7 +84,7 @@ class ComposerTest extends \PHPUnit_Framework_TestCase
      */
     public function validateComposerJsonDataProvider()
     {
-        $root = \Magento\Framework\Test\Utility\Files::init()->getPathToSource();
+        $root = \Magento\Framework\App\Utility\Files::init()->getPathToSource();
         $result = [];
         foreach (glob("{$root}/app/code/Magento/*", GLOB_ONLYDIR) as $dir) {
             $result[$dir] = [$dir, 'magento2-module'];
@@ -365,7 +365,7 @@ class ComposerTest extends \PHPUnit_Framework_TestCase
     {
         try {
             self::$shell->execute(self::$composerPath . ' --version');
-        } catch (Exception $e) {
+        } catch (LocalizedException $e) {
             return false;
         }
         return true;

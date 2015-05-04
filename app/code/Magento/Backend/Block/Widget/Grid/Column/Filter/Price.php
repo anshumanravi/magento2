@@ -66,7 +66,7 @@ class Price extends \Magento\Backend\Block\Widget\Grid\Column\Filter\AbstractFil
                 'From'
             ) . '" value="' . $this->getEscapedValue(
                 'from'
-            ) . '" class="input-text no-changes"  ' . $this->getUiId(
+            ) . '" class="input-text admin__control-text no-changes"  ' . $this->getUiId(
                 'filter',
                 $this->_getHtmlName(),
                 'from'
@@ -81,7 +81,7 @@ class Price extends \Magento\Backend\Block\Widget\Grid\Column\Filter\AbstractFil
                 'To'
             ) . '" value="' . $this->getEscapedValue(
                 'to'
-            ) . '" class="input-text no-changes" ' . $this->getUiId(
+            ) . '" class="input-text admin__control-text no-changes" ' . $this->getUiId(
                 'filter',
                 $this->_getHtmlName(),
                 'to'
@@ -103,7 +103,7 @@ class Price extends \Magento\Backend\Block\Widget\Grid\Column\Filter\AbstractFil
      */
     public function getDisplayCurrencySelect()
     {
-        if (!is_null($this->getColumn()->getData('display_currency_select'))) {
+        if ($this->getColumn()->getData('display_currency_select') !== null) {
             return $this->getColumn()->getData('display_currency_select');
         } else {
             return true;
@@ -117,7 +117,7 @@ class Price extends \Magento\Backend\Block\Widget\Grid\Column\Filter\AbstractFil
      */
     public function getCurrencyAffect()
     {
-        if (!is_null($this->getColumn()->getData('currency_affect'))) {
+        if ($this->getColumn()->getData('currency_affect') !== null) {
             return $this->getColumn()->getData('currency_affect');
         } else {
             return true;
@@ -153,7 +153,7 @@ class Price extends \Magento\Backend\Block\Widget\Grid\Column\Filter\AbstractFil
      */
     protected function _getCurrencyList()
     {
-        if (is_null($this->_currencyList)) {
+        if ($this->_currencyList === null) {
             $this->_currencyList = $this->_currencyModel->getConfigAllowCurrencies();
         }
         return $this->_currencyList;

@@ -37,12 +37,14 @@ class View extends \Magento\Backend\Block\Template
      * Retrieve required options from parent
      *
      * @return void
-     * @throws \Magento\Framework\Model\Exception
+     * @throws \Magento\Framework\Exception\LocalizedException
      */
     protected function _beforeToHtml()
     {
         if (!$this->getParentBlock()) {
-            throw new \Magento\Framework\Model\Exception(__('Please correct the parent block for this block.'));
+            throw new \Magento\Framework\Exception\LocalizedException(
+                __('Please correct the parent block for this block.')
+            );
         }
         $this->setEntity($this->getParentBlock()->getSource());
         parent::_beforeToHtml();
@@ -58,7 +60,7 @@ class View extends \Magento\Backend\Block\Template
         $this->addChild(
             'submit_button',
             'Magento\Backend\Block\Widget\Button',
-            ['id' => 'submit_comment_button', 'label' => __('Submit Comment'), 'class' => 'save']
+            ['id' => 'submit_comment_button', 'label' => __('Submit Comment'), 'class' => 'action-secondary save']
         );
         return parent::_prepareLayout();
     }

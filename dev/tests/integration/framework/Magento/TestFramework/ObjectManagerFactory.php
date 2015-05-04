@@ -32,7 +32,7 @@ class ObjectManagerFactory extends \Magento\Framework\App\ObjectManagerFactory
     /**
      * @var string
      */
-    protected $envFactoryClassName = 'Magento\TestFramework\ObjectManager\EnvironmentFactory';
+    protected $envFactoryClassName = 'Magento\TestFramework\App\EnvironmentFactory';
 
     /**
      * @var array
@@ -57,6 +57,12 @@ class ObjectManagerFactory extends \Magento\Framework\App\ObjectManagerFactory
         $deploymentConfig = $this->createDeploymentConfig($directoryList, $arguments);
         $this->factory->setArguments($arguments);
         $objectManager->addSharedInstance($deploymentConfig, 'Magento\Framework\App\DeploymentConfig');
+        $objectManager->addSharedInstance(
+            $objectManager->get(
+                'Magento\Framework\App\ObjectManager\ConfigLoader'
+            ),
+            'Magento\Framework\ObjectManager\ConfigLoaderInterface'
+        );
         $objectManager->get('Magento\Framework\Interception\PluginListInterface')->reset();
         $objectManager->configure(
             $objectManager->get('Magento\Framework\App\ObjectManager\ConfigLoader')->load('global')
@@ -89,7 +95,6 @@ class ObjectManagerFactory extends \Magento\Framework\App\ObjectManagerFactory
                     'Magento\Framework\Stdlib\CookieManagerInterface' => 'Magento\TestFramework\CookieManager',
                     'Magento\Framework\ObjectManager\DynamicConfigInterface' =>
                         '\Magento\TestFramework\ObjectManager\Configurator',
-                    'Magento\Framework\Stdlib\Cookie' => 'Magento\TestFramework\Cookie',
                     'Magento\Framework\App\RequestInterface' => 'Magento\TestFramework\Request',
                     'Magento\Framework\App\Request\Http' => 'Magento\TestFramework\Request',
                     'Magento\Framework\App\ResponseInterface' => 'Magento\TestFramework\Response',

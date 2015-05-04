@@ -7,8 +7,7 @@ namespace Magento\Sales\Model\Resource\Collection;
 
 /**
  * Flat sales abstract collection
- *
- * @author      Magento Core Team <core@magentocommerce.com>
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
 abstract class AbstractCollection extends \Magento\Framework\Model\Resource\Db\Collection\AbstractCollection
 {
@@ -16,6 +15,34 @@ abstract class AbstractCollection extends \Magento\Framework\Model\Resource\Db\C
      * @var \Zend_Db_Select
      */
     protected $_countSelect;
+
+    /**
+     * @var \Magento\Sales\Model\Resource\EntitySnapshot
+     */
+    protected $entitySnapshot;
+
+    /**
+     * @param \Magento\Framework\Data\Collection\EntityFactoryInterface $entityFactory
+     * @param \Psr\Log\LoggerInterface $logger
+     * @param \Magento\Framework\Data\Collection\Db\FetchStrategyInterface $fetchStrategy
+     * @param \Magento\Framework\Event\ManagerInterface $eventManager
+     * @param \Magento\Sales\Model\Resource\EntitySnapshot $entitySnapshot
+     * @param string|null $connection
+     * @param \Magento\Framework\Model\Resource\Db\AbstractDb $resource
+     * @throws \Zend_Exception
+     */
+    public function __construct(
+        \Magento\Framework\Data\Collection\EntityFactoryInterface $entityFactory,
+        \Psr\Log\LoggerInterface $logger,
+        \Magento\Framework\Data\Collection\Db\FetchStrategyInterface $fetchStrategy,
+        \Magento\Framework\Event\ManagerInterface $eventManager,
+        \Magento\Sales\Model\Resource\EntitySnapshot $entitySnapshot,
+        $connection = null,
+        \Magento\Framework\Model\Resource\Db\AbstractDb $resource = null
+    ) {
+        $this->entitySnapshot = $entitySnapshot;
+        parent::__construct($entityFactory, $logger, $fetchStrategy, $eventManager, $connection, $resource);
+    }
 
     /**
      * Set select count sql
@@ -47,7 +74,7 @@ abstract class AbstractCollection extends \Magento\Framework\Model\Resource\Db\C
      *
      * @param string|\Magento\Eav\Model\Entity\Attribute $attribute
      * @return string
-     * @throws \Magento\Framework\Model\Exception
+     * @throws \Magento\Framework\Exception\LocalizedException
      */
     protected function _attributeToField($attribute)
     {
@@ -58,7 +85,7 @@ abstract class AbstractCollection extends \Magento\Framework\Model\Resource\Db\C
             $field = $attribute->getAttributeCode();
         }
         if (!$field) {
-            throw new \Magento\Framework\Model\Exception(__('We cannot determine the field name.'));
+            throw new \Magento\Framework\Exception\LocalizedException(__('We cannot determine the field name.'));
         }
         return $field;
     }
@@ -152,25 +179,6 @@ abstract class AbstractCollection extends \Magento\Framework\Model\Resource\Db\C
     }
 
     /**
-     * Backward compatibility with EAV collection
-     *
-     * @param string $alias
-     * @param string $attribute
-     * @param string $bind
-     * @param string $filter
-     * @param string $joinType
-     * @param int $storeId
-     * @return $this
-     *
-     * @todo implement join functionality if necessary
-     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
-     */
-    public function joinAttribute($alias, $attribute, $bind, $filter = null, $joinType = 'inner', $storeId = null)
-    {
-        return $this;
-    }
-
-    /**
      * Get search criteria.
      *
      * @return \Magento\Framework\Api\SearchCriteriaInterface|null
@@ -181,6 +189,18 @@ abstract class AbstractCollection extends \Magento\Framework\Model\Resource\Db\C
     }
 
     /**
+     * Set search criteria.
+     *
+     * @param \Magento\Framework\Api\SearchCriteriaInterface $searchCriteria
+     * @return $this
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+     */
+    public function setSearchCriteria(\Magento\Framework\Api\SearchCriteriaInterface $searchCriteria = null)
+    {
+        return $this;
+    }
+
+    /**
      * Get total count.
      *
      * @return int
@@ -188,5 +208,88 @@ abstract class AbstractCollection extends \Magento\Framework\Model\Resource\Db\C
     public function getTotalCount()
     {
         return $this->getSize();
+    }
+
+    /**
+     * Set total count.
+     *
+     * @param int $totalCount
+     * @return $this
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+     */
+    public function setTotalCount($totalCount)
+    {
+        return $this;
+    }
+
+    /**
+     * Set items list.
+     *
+     * @param \Magento\Framework\Api\ExtensibleDataInterface[] $items
+     * @return $this
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+     */
+    public function setItems(array $items = null)
+    {
+        return $this;
+    }
+
+    /**
+     * Returns a collection item that corresponds to the fetched row
+     * and moves the internal data pointer ahead
+     * All returned rows marked as non changed to prevent unnecessary persistence operations
+     *
+     * @return  \Magento\Framework\Object|bool
+     */
+    public function fetchItem()
+    {
+        if (null === $this->_fetchStmt) {
+            $this->_renderOrders()->_renderLimit();
+
+            $this->_fetchStmt = $this->getConnection()->query($this->getSelect());
+        }
+        $data = $this->_fetchStmt->fetch();
+        if (!empty($data) && is_array($data)) {
+            /**@var \Magento\Sales\Model\AbstractModel $item */
+            $item = $this->getNewEmptyItem();
+            if ($this->getIdFieldName()) {
+                $item->setIdFieldName($this->getIdFieldName());
+            }
+            $item->setData($data);
+            $this->entitySnapshot->registerSnapshot($item);
+            return $item;
+        }
+        return false;
+    }
+
+    /**
+     * Load data with filter in place
+     * All returned rows marked as non changed to prevent unnecessary persistence operations
+     *
+     * @param   bool $printQuery
+     * @param   bool $logQuery
+     * @return  $this
+     */
+    public function loadWithFilter($printQuery = false, $logQuery = false)
+    {
+        $this->_beforeLoad();
+        $this->_renderFilters()->_renderOrders()->_renderLimit();
+        $this->printLogQuery($printQuery, $logQuery);
+        $data = $this->getData();
+        $this->resetData();
+        if (is_array($data)) {
+            foreach ($data as $row) {
+                $item = $this->getNewEmptyItem();
+                if ($this->getIdFieldName()) {
+                    $item->setIdFieldName($this->getIdFieldName());
+                }
+                $item->setData($row);
+                $this->entitySnapshot->registerSnapshot($item);
+                $this->addItem($item);
+            }
+        }
+        $this->_setIsLoaded();
+        $this->_afterLoad();
+        return $this;
     }
 }

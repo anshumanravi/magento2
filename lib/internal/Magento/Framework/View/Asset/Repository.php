@@ -152,7 +152,7 @@ class Repository
             $module = $params['module'];
         }
         $isSecure = isset($params['_secure']) ? (bool) $params['_secure'] : null;
-        $themePath = $this->design->getThemePath($params['themeModel']);
+        $themePath = isset($params['theme']) ? $params['theme'] : $this->design->getThemePath($params['themeModel']);
         $context = $this->getFallbackContext(
             UrlInterface::URL_TYPE_STATIC,
             $isSecure,
@@ -346,7 +346,7 @@ class Repository
      *
      * @param string $fileId
      * @return array
-     * @throws \Magento\Framework\Exception
+     * @throws \Magento\Framework\Exception\LocalizedException
      */
     public static function extractModule($fileId)
     {
@@ -355,7 +355,9 @@ class Repository
         }
         $result = explode(self::FILE_ID_SEPARATOR, $fileId, 2);
         if (empty($result[0])) {
-            throw new \Magento\Framework\Exception('Scope separator "::" cannot be used without scope identifier.');
+            throw new \Magento\Framework\Exception\LocalizedException(
+                new \Magento\Framework\Phrase('Scope separator "::" cannot be used without scope identifier.')
+            );
         }
         return [$result[0], $result[1]];
     }

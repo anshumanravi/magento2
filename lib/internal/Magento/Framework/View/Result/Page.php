@@ -37,7 +37,7 @@ class Page extends Layout
     protected $pageConfig;
 
     /**
-     * @var \Magento\Framework\View\Page\Config\Renderer
+     * @var \Magento\Framework\View\Page\Config\RendererInterface
      */
     protected $pageConfigRenderer;
 
@@ -328,7 +328,7 @@ class Page extends Layout
         try {
             $params = array_merge(['_secure' => $this->request->isSecure()], $params);
             return $this->assetRepo->getUrlWithParams($fileId, $params);
-        } catch (\Magento\Framework\Exception $e) {
+        } catch (\Magento\Framework\Exception\LocalizedException $e) {
             $this->logger->critical($e);
             return $this->urlBuilder->getUrl('', ['_direct' => 'core/index/notFound']);
         }

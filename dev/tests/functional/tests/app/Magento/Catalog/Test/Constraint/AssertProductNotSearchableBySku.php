@@ -17,10 +17,6 @@ use Magento\Mtf\Fixture\FixtureInterface;
  */
 class AssertProductNotSearchableBySku extends AbstractConstraint
 {
-    /* tags */
-    const SEVERITY = 'low';
-    /* end tags */
-
     /**
      * Assert that product cannot be found via Quick Search using searchable product attributes.
      *
@@ -37,7 +33,7 @@ class AssertProductNotSearchableBySku extends AbstractConstraint
         $cmsIndex->open();
         $cmsIndex->getSearchBlock()->search($product->getSku());
         \PHPUnit_Framework_Assert::assertFalse(
-            $catalogSearchResult->getListProductBlock()->isProductVisible($product->getName()),
+            $catalogSearchResult->getListProductBlock()->getProductItem($product)->isVisible(),
             'Product was found by SKU.'
         );
     }

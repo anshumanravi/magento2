@@ -60,23 +60,17 @@ class Type extends \Magento\Catalog\Model\Product\Type\Virtual
     private $typeHandler;
 
     /**
-     * @var \Magento\Core\Helper\Data
-     */
-    protected $_coreData;
-
-    /**
      * Construct
      *
      * @param \Magento\Catalog\Model\Product\Option $catalogProductOption
      * @param \Magento\Eav\Model\Config $eavConfig
      * @param \Magento\Catalog\Model\Product\Type $catalogProductType
      * @param \Magento\Framework\Event\ManagerInterface $eventManager
-     * @param \Magento\Core\Helper\File\Storage\Database $fileStorageDb
+     * @param \Magento\MediaStorage\Helper\File\Storage\Database $fileStorageDb
      * @param \Magento\Framework\Filesystem $filesystem
      * @param \Magento\Framework\Registry $coreRegistry
      * @param \Psr\Log\LoggerInterface $logger
      * @param ProductRepositoryInterface $productRepository
-     * @param \Magento\Core\Helper\Data $coreData
      * @param \Magento\Downloadable\Model\Resource\SampleFactory $sampleResFactory
      * @param \Magento\Downloadable\Model\Resource\Link $linkResource
      * @param \Magento\Downloadable\Model\Resource\Link\CollectionFactory $linksFactory
@@ -91,12 +85,11 @@ class Type extends \Magento\Catalog\Model\Product\Type\Virtual
         \Magento\Eav\Model\Config $eavConfig,
         \Magento\Catalog\Model\Product\Type $catalogProductType,
         \Magento\Framework\Event\ManagerInterface $eventManager,
-        \Magento\Core\Helper\File\Storage\Database $fileStorageDb,
+        \Magento\MediaStorage\Helper\File\Storage\Database $fileStorageDb,
         \Magento\Framework\Filesystem $filesystem,
         \Magento\Framework\Registry $coreRegistry,
         \Psr\Log\LoggerInterface $logger,
         ProductRepositoryInterface $productRepository,
-        \Magento\Core\Helper\Data $coreData,
         \Magento\Downloadable\Model\Resource\SampleFactory $sampleResFactory,
         \Magento\Downloadable\Model\Resource\Link $linkResource,
         \Magento\Downloadable\Model\Resource\Link\CollectionFactory $linksFactory,
@@ -112,7 +105,6 @@ class Type extends \Magento\Catalog\Model\Product\Type\Virtual
         $this->_sampleFactory = $sampleFactory;
         $this->_linkFactory = $linkFactory;
         $this->typeHandler = $typeHandler;
-        $this->_coreData = $coreData;
         parent::__construct(
             $catalogProductOption,
             $eavConfig,
@@ -134,7 +126,7 @@ class Type extends \Magento\Catalog\Model\Product\Type\Virtual
      */
     public function getLinks($product)
     {
-        if (is_null($product->getDownloadableLinks())) {
+        if ($product->getDownloadableLinks() === null) {
             $_linkCollection = $this->_linksFactory->create()->addProductToFilter(
                 $product->getId()
             )->addTitleToResult(
@@ -210,7 +202,7 @@ class Type extends \Magento\Catalog\Model\Product\Type\Virtual
      */
     public function getSamples($product)
     {
-        if (is_null($product->getDownloadableSamples())) {
+        if ($product->getDownloadableSamples() === null) {
             $_sampleCollection = $this->_samplesFactory->create()->addProductToFilter(
                 $product->getId()
             )->addTitleToResult(
@@ -258,7 +250,7 @@ class Type extends \Magento\Catalog\Model\Product\Type\Virtual
      *
      * @param \Magento\Catalog\Model\Product $product
      * @return $this
-     * @throws \Magento\Framework\Model\Exception
+     * @throws \Magento\Framework\Exception\LocalizedException
      */
     public function checkProductBuyState($product)
     {
@@ -272,7 +264,7 @@ class Type extends \Magento\Catalog\Model\Product\Type\Virtual
                     $buyRequest->setLinks($allLinksIds);
                     $product->addCustomOption('info_buyRequest', serialize($buyRequest->getData()));
                 } else {
-                    throw new \Magento\Framework\Model\Exception(__('Please specify product link(s).'));
+                    throw new \Magento\Framework\Exception\LocalizedException(__('Please specify product link(s).'));
                 }
             }
         }

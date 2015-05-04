@@ -68,7 +68,7 @@ class History extends \Magento\Backend\Block\Template implements \Magento\Backen
             $history[] = $this->_prepareHistoryItem(
                 $orderComment->getStatusLabel(),
                 $orderComment->getIsCustomerNotified(),
-                $orderComment->getCreatedAtDate(),
+                $this->getOrderAdminDate($orderComment->getCreatedAt()),
                 $orderComment->getComment()
             );
         }
@@ -77,14 +77,14 @@ class History extends \Magento\Backend\Block\Template implements \Magento\Backen
             $history[] = $this->_prepareHistoryItem(
                 __('Credit memo #%1 created', $_memo->getIncrementId()),
                 $_memo->getEmailSent(),
-                $_memo->getCreatedAtDate()
+                $this->getOrderAdminDate($_memo->getCreatedAt())
             );
 
             foreach ($_memo->getCommentsCollection() as $_comment) {
                 $history[] = $this->_prepareHistoryItem(
                     __('Credit memo #%1 comment added', $_memo->getIncrementId()),
                     $_comment->getIsCustomerNotified(),
-                    $_comment->getCreatedAtDate(),
+                    $this->getOrderAdminDate($_comment->getCreatedAt()),
                     $_comment->getComment()
                 );
             }
@@ -94,14 +94,14 @@ class History extends \Magento\Backend\Block\Template implements \Magento\Backen
             $history[] = $this->_prepareHistoryItem(
                 __('Shipment #%1 created', $_shipment->getIncrementId()),
                 $_shipment->getEmailSent(),
-                $_shipment->getCreatedAtDate()
+                $this->getOrderAdminDate($_shipment->getCreatedAt())
             );
 
             foreach ($_shipment->getCommentsCollection() as $_comment) {
                 $history[] = $this->_prepareHistoryItem(
                     __('Shipment #%1 comment added', $_shipment->getIncrementId()),
                     $_comment->getIsCustomerNotified(),
-                    $_comment->getCreatedAtDate(),
+                    $this->getOrderAdminDate($_comment->getCreatedAt()),
                     $_comment->getComment()
                 );
             }
@@ -111,14 +111,14 @@ class History extends \Magento\Backend\Block\Template implements \Magento\Backen
             $history[] = $this->_prepareHistoryItem(
                 __('Invoice #%1 created', $_invoice->getIncrementId()),
                 $_invoice->getEmailSent(),
-                $_invoice->getCreatedAtDate()
+                $this->getOrderAdminDate($_invoice->getCreatedAt())
             );
 
             foreach ($_invoice->getCommentsCollection() as $_comment) {
                 $history[] = $this->_prepareHistoryItem(
                     __('Invoice #%1 comment added', $_invoice->getIncrementId()),
                     $_comment->getIsCustomerNotified(),
-                    $_comment->getCreatedAtDate(),
+                    $this->getOrderAdminDate($_comment->getCreatedAt()),
                     $_comment->getComment()
                 );
             }
@@ -128,7 +128,7 @@ class History extends \Magento\Backend\Block\Template implements \Magento\Backen
             $history[] = $this->_prepareHistoryItem(
                 __('Tracking number %1 for %2 assigned', $_track->getNumber(), $_track->getTitle()),
                 false,
-                $_track->getCreatedAtDate()
+                $this->getOrderAdminDate($_track->getCreatedAt())
             );
         }
 
@@ -141,18 +141,21 @@ class History extends \Magento\Backend\Block\Template implements \Magento\Backen
      *
      * @param array $item
      * @param string $dateType
-     * @param string $format
+     * @param int $format
      * @return string
      */
-    public function getItemCreatedAt(array $item, $dateType = 'date', $format = 'medium')
+    public function getItemCreatedAt(array $item, $dateType = 'date', $format = \IntlDateFormatter::MEDIUM)
     {
         if (!isset($item['created_at'])) {
             return '';
         }
+        $date = $item['created_at'] instanceof \DateTimeInterface
+            ? $item['created_at']
+            : new \DateTime($item['created_at']);
         if ('date' === $dateType) {
-            return $this->formatDate($item['created_at'], $format);
+            return $this->_localeDate->formatDateTime($date, $format, $format);
         }
-        return $this->formatTime($item['created_at'], $format);
+        return $this->_localeDate->formatDateTime($date, \IntlDateFormatter::NONE, $format);
     }
 
     /**
@@ -198,7 +201,7 @@ class History extends \Magento\Backend\Block\Template implements \Magento\Backen
      *
      * @param string $label
      * @param bool $notified
-     * @param \Magento\Framework\Stdlib\DateTime\DateInterface $created
+     * @param \DateTime $created
      * @param string $comment
      * @return array
      */
@@ -293,10 +296,21 @@ class History extends \Magento\Backend\Block\Template implements \Magento\Backen
         $createdAtA = $a['created_at'];
         $createdAtB = $b['created_at'];
 
-        /** @var $createdAta \Magento\Framework\Stdlib\DateTime\DateInterface */
+        /** @var $createdAtA \DateTime */
         if ($createdAtA->getTimestamp() == $createdAtB->getTimestamp()) {
             return 0;
         }
         return $createdAtA->getTimestamp() < $createdAtB->getTimestamp() ? -1 : 1;
+    }
+
+    /**
+     * Get order admin date
+     * 
+     * @param int $createdAt
+     * @return \DateTime
+     */
+    public function getOrderAdminDate($createdAt)
+    {
+        return $this->_localeDate->date(new \DateTime($createdAt));
     }
 }

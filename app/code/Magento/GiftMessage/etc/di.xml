@@ -6,13 +6,6 @@
  */
 -->
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../../../lib/internal/Magento/Framework/ObjectManager/etc/config.xsd">
-    <type name="Magento\Framework\Module\Updater\SetupFactory">
-        <arguments>
-            <argument name="resourceTypes" xsi:type="array">
-                <item name="giftmessage_setup" xsi:type="string">Magento\GiftMessage\Model\Resource\Setup</item>
-            </argument>
-        </arguments>
-    </type>
     <type name="Magento\Framework\Module\Setup\Migration">
         <arguments>
             <argument name="compositeModules" xsi:type="array">
@@ -22,5 +15,15 @@
     </type>
     <preference for="Magento\GiftMessage\Api\CartRepositoryInterface" type="Magento\GiftMessage\Model\CartRepository"/>
     <preference for="Magento\GiftMessage\Api\ItemRepositoryInterface" type="Magento\GiftMessage\Model\ItemRepository"/>
+    <preference for="Magento\GiftMessage\Api\OrderRepositoryInterface" type="Magento\GiftMessage\Model\OrderRepository"/>
+    <preference for="Magento\GiftMessage\Api\OrderItemRepositoryInterface" type="Magento\GiftMessage\Model\OrderItemRepository"/>
     <preference for="Magento\GiftMessage\Api\Data\MessageInterface" type="Magento\GiftMessage\Model\Message"/>
+    <type name="Magento\GiftMessage\Model\Plugin\QuoteItem" shared="false" />
+    <type name="Magento\Quote\Model\Quote\Item\ToOrderItem">
+        <plugin name="gift_message_quote_item_conversion" type="Magento\GiftMessage\Model\Plugin\QuoteItem"/>
+    </type>
+    <type name="Magento\Sales\Api\OrderRepositoryInterface">
+        <plugin name="save_gift_message" type="Magento\GiftMessage\Model\Plugin\OrderSave"/>
+        <plugin name="get_gift_message" type="Magento\GiftMessage\Model\Plugin\OrderGet"/>
+    </type>
 </config>

@@ -337,7 +337,7 @@ abstract class AbstractAction
      */
     public function getTypeIndexers()
     {
-        if (is_null($this->_indexers)) {
+        if ($this->_indexers === null) {
             $this->_indexers = [];
             $types = $this->_catalogProductType->getTypesByPriority();
             foreach ($types as $typeId => $typeInfo) {
@@ -365,13 +365,13 @@ abstract class AbstractAction
      *
      * @param string $productTypeId
      * @return \Magento\Catalog\Model\Resource\Product\Indexer\Price\PriceInterface
-     * @throws \Magento\Catalog\Exception
+     * @throws \Magento\Framework\Exception\InputException
      */
     protected function _getIndexer($productTypeId)
     {
         $this->getTypeIndexers();
         if (!isset($this->_indexers[$productTypeId])) {
-            throw new \Magento\Catalog\Exception(__('Unsupported product type "%1".', $productTypeId));
+            throw new \Magento\Framework\Exception\InputException(__('Unsupported product type "%1".', $productTypeId));
         }
         return $this->_indexers[$productTypeId];
     }
@@ -410,7 +410,7 @@ abstract class AbstractAction
      */
     protected function _useIdxTable($value = null)
     {
-        if (!is_null($value)) {
+        if ($value !== null) {
             $this->_useIdxTable = (bool)$value;
         }
         return $this->_useIdxTable;

@@ -5,7 +5,7 @@
  */
 namespace Magento\Sales\Model\Resource\Order\Payment;
 
-use Magento\Sales\Model\Resource\Entity;
+use Magento\Sales\Model\Resource\EntityAbstract;
 use Magento\Sales\Model\Spi\TransactionResourceInterface;
 
 /**
@@ -13,7 +13,7 @@ use Magento\Sales\Model\Spi\TransactionResourceInterface;
  *
  * @author      Magento Core Team <core@magentocommerce.com>
  */
-class Transaction extends Entity implements TransactionResourceInterface
+class Transaction extends EntityAbstract implements TransactionResourceInterface
 {
     /**
      * Serializeable field: additional_information
@@ -129,7 +129,7 @@ class Transaction extends Entity implements TransactionResourceInterface
      * Also serialize additional information, if any
      *
      * @param \Magento\Framework\Model\AbstractModel|\Magento\Sales\Model\Order\Payment\Transaction $transaction
-     * @throws \Magento\Framework\Model\Exception
+     * @throws \Magento\Framework\Exception\LocalizedException
      * @return $this
      */
     protected function _beforeSave(\Magento\Framework\Model\AbstractModel $transaction)
@@ -142,7 +142,7 @@ class Transaction extends Entity implements TransactionResourceInterface
 
         if ($parentTxnId) {
             if (!$txnId || !$orderId || !$paymentId) {
-                throw new \Magento\Framework\Model\Exception(
+                throw new \Magento\Framework\Exception\LocalizedException(
                     __('We don\'t have enough information to save the parent transaction ID.')
                 );
             }

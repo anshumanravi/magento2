@@ -16,10 +16,6 @@ use Magento\Mtf\Constraint\AbstractConstraint;
  */
 class AssertChildProductsInGrid extends AbstractConstraint
 {
-    /* tags */
-    const SEVERITY = 'low';
-    /* end tags */
-
     /**
      * Default status visibility on child products
      */
@@ -56,7 +52,7 @@ class AssertChildProductsInGrid extends AbstractConstraint
             }
         }
 
-        \PHPUnit_Framework_Assert::assertEmpty($errors, implode($errors, ' '));
+        \PHPUnit_Framework_Assert::assertEmpty($errors, implode(' ', $errors));
     }
 
     /**

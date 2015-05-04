@@ -18,10 +18,6 @@ use Magento\Mtf\Constraint\AbstractConstraint;
  */
 class AssertCategoryIsNotIncludeInMenu extends AbstractConstraint
 {
-    /* tags */
-    const SEVERITY = 'low';
-    /* end tags */
-
     /**
      * Assert that the category is no longer available on the top menu bar
      *
@@ -53,7 +49,7 @@ class AssertCategoryIsNotIncludeInMenu extends AbstractConstraint
             $products = $category->getDataFieldConfig('category_products')['source']->getProducts();
             foreach ($products as $productFixture) {
                 \PHPUnit_Framework_Assert::assertTrue(
-                    $categoryView->getListProductBlock()->isProductVisible($productFixture->getName()),
+                    $categoryView->getListProductBlock()->getProductItem($productFixture)->isVisible(),
                     "Products '{$productFixture->getName()}' not find."
                 );
             }

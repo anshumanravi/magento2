@@ -5,7 +5,7 @@
  */
 namespace Magento\Shipping\Model\Carrier;
 
-use Magento\Framework\Model\Exception;
+use Magento\Framework\Exception\LocalizedException;
 use Magento\Quote\Model\Quote\Address\RateRequest;
 use Magento\Quote\Model\Quote\Address\RateResult\Error;
 use Magento\Shipping\Model\Shipment\Request;
@@ -157,6 +157,7 @@ abstract class AbstractCarrierOnline extends AbstractCarrier
      *
      * @param string $code
      * @return $this
+     * @api
      */
     public function setActiveFlag($code = 'active')
     {
@@ -179,6 +180,7 @@ abstract class AbstractCarrierOnline extends AbstractCarrier
      *
      * @param string $tracking
      * @return string|false
+     * @api
      */
     public function getTrackingInfo($tracking)
     {
@@ -249,6 +251,7 @@ abstract class AbstractCarrierOnline extends AbstractCarrier
      * @param RateRequest $request
      * @return array
      * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+     * @api
      */
     public function getAllItems(RateRequest $request)
     {
@@ -279,12 +282,12 @@ abstract class AbstractCarrierOnline extends AbstractCarrier
     /**
      * Processing additional validation to check if carrier applicable.
      *
-     * @param RateRequest $request
-     * @return $this|bool|Error
+     * @param \Magento\Framework\Object $request
+     * @return $this|bool|\Magento\Framework\Object
      * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      * @SuppressWarnings(PHPMD.NPathComplexity)
      */
-    public function proccessAdditionalValidation(RateRequest $request)
+    public function proccessAdditionalValidation(\Magento\Framework\Object $request)
     {
         //Skip by item validation if there is no items in request
         if (!count($this->getAllItems($request))) {
@@ -424,13 +427,13 @@ abstract class AbstractCarrierOnline extends AbstractCarrier
      *
      * @param Request $request
      * @return \Magento\Framework\Object
-     * @throws \Magento\Framework\Model\Exception
+     * @throws \Magento\Framework\Exception\LocalizedException
      */
     public function requestToShipment($request)
     {
         $packages = $request->getPackages();
         if (!is_array($packages) || !$packages) {
-            throw new Exception(__('No packages for request'));
+            throw new LocalizedException(__('No packages for request'));
         }
         if ($request->getStoreId() != null) {
             $this->setStore($request->getStoreId());
@@ -471,14 +474,14 @@ abstract class AbstractCarrierOnline extends AbstractCarrier
      *
      * @param Request $request
      * @return \Magento\Framework\Object
-     * @throws \Magento\Framework\Model\Exception
+     * @throws \Magento\Framework\Exception\LocalizedException
      */
     public function returnOfShipment($request)
     {
         $request->setIsReturn(true);
         $packages = $request->getPackages();
         if (!is_array($packages) || !$packages) {
-            throw new Exception(__('No packages for request'));
+            throw new LocalizedException(__('No packages for request'));
         }
         if ($request->getStoreId() != null) {
             $this->setStore($request->getStoreId());
@@ -523,6 +526,7 @@ abstract class AbstractCarrierOnline extends AbstractCarrier
      *
      * @todo implement rollback logic
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+     * @api
      */
     public function rollBack($data)
     {
@@ -572,6 +576,7 @@ abstract class AbstractCarrierOnline extends AbstractCarrier
      * @param null|string $countyDest
      * @return bool
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+     * @api
      */
     public function isGirthAllowed($countyDest = null)
     {
@@ -581,6 +586,7 @@ abstract class AbstractCarrierOnline extends AbstractCarrier
     /**
      * @param \Magento\Framework\Object|null $request
      * @return $this
+     * @api
      */
     public function setRawRequest($request)
     {
@@ -594,6 +600,7 @@ abstract class AbstractCarrierOnline extends AbstractCarrier
      * @param string $cost
      * @param string $method
      * @return float|string
+     * @api
      */
     public function getMethodPrice($cost, $method = '')
     {
@@ -606,5 +613,19 @@ abstract class AbstractCarrierOnline extends AbstractCarrier
         ) <= $this->_rawRequest->getBaseSubtotalInclTax() ? '0.00' : $this->getFinalPriceWithHandlingFee(
             $cost
         );
+    }
+
+    /**
+     * Parse XML string and return XML document object or false
+     *
+     * @param string $xmlContent
+     * @param string $customSimplexml
+     *
+     * @return \SimpleXMLElement|bool
+     * @api
+     */
+    public function parseXml($xmlContent, $customSimplexml = 'SimpleXMLElement')
+    {
+        return simplexml_load_string($xmlContent, $customSimplexml);
     }
 }

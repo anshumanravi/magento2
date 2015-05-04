@@ -45,6 +45,7 @@ class ShareWishlistEntityTest extends Injectable
     /* tags */
     const MVP = 'no';
     const DOMAIN = 'CS';
+    const TO_MAINTAIN = 'yes';
     /* end tags */
 
     /**
@@ -165,7 +166,9 @@ class ShareWishlistEntityTest extends Injectable
         $this->loginCustomer($customer);
         $browser->open($_ENV['app_frontend_url'] . $product->getUrlKey() . '.html');
         $this->catalogProductView->getViewBlock()->clickAddToWishlist();
+        $this->wishlistIndex->getMessagesBlock()->waitSuccessMessage();
         $this->wishlistIndex->getWishlistBlock()->clickShareWishList();
+        $this->cmsIndex->getCmsPageBlock()->waitPageInit();
         $this->wishlistShare->getSharingInfoForm()->fillForm($sharingInfo);
         $this->wishlistShare->getSharingInfoForm()->shareWishlist();
     }

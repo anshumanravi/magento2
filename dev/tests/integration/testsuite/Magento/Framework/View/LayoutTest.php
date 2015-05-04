@@ -204,7 +204,7 @@ class LayoutTest extends \PHPUnit_Framework_TestCase
 
     /**
      * @dataProvider blockNotExistsDataProvider
-     * @expectedException \Magento\Framework\Model\Exception
+     * @expectedException \Magento\Framework\Exception\LocalizedException
      */
     public function testCreateBlockNotExists($name)
     {
@@ -274,7 +274,7 @@ class LayoutTest extends \PHPUnit_Framework_TestCase
         $msg = 'Html tag "span" is forbidden for usage in containers. ' .
             'Consider to use one of the allowed: dd, div, dl, fieldset, main, header, ' .
             'footer, ol, p, section, table, tfoot, ul.';
-        $this->setExpectedException('Magento\Framework\Exception', $msg);
+        $this->setExpectedException('Magento\Framework\Exception\LocalizedException', $msg);
         $this->_layout->addContainer('container', 'Container', ['htmlTag' => 'span']);
     }
 
@@ -354,7 +354,7 @@ class LayoutTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @expectedException \Magento\Framework\Model\Exception
+     * @expectedException \Magento\Framework\Exception\LocalizedException
      */
     public function testAddBlockInvalidType()
     {

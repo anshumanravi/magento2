@@ -16,10 +16,6 @@ use Magento\Install\Test\Fixture\Install as InstallConfig;
  */
 class AssertSuccessInstall extends AbstractConstraint
 {
-    /* tags */
-    const SEVERITY = 'high';
-    /* end tags */
-
     /**
      * Admin info fields mapping.
      *
@@ -56,6 +52,11 @@ class AssertSuccessInstall extends AbstractConstraint
         $dbData = $installPage->getInstallBlock()->getDbInfo();
 
         $allData = array_merge($user->getData(), $installConfig->getData());
+
+        foreach ($installConfig->getData() as $key => $value) {
+            $allData[$key] = isset($value['value']) ? $value['value'] : $value;
+        }
+
         $allData['admin'] = $allData['web'] . $allData['admin'] . '/';
 
         foreach ($this->adminFieldsList as $field) {

@@ -58,7 +58,7 @@ class MinifierTest extends \PHPUnit_Framework_TestCase
      * @param string $requestedFilePath
      * @param string $testFile
      * @param callable $assertionCallback
-     * @throws \Magento\Framework\Exception
+     * @throws \Magento\Framework\Exception\LocalizedException
      */
     protected function _testCssMinification($requestedUri, $requestedFilePath, $testFile, $assertionCallback)
     {
@@ -213,7 +213,7 @@ class MinifierTest extends \PHPUnit_Framework_TestCase
             ['verbosity' => \Magento\Tools\View\Deployer\Log::SILENT]
         );
 
-        $filesUtil = $this->getMock('\Magento\Framework\Test\Utility\Files', [], [], '', false);
+        $filesUtil = $this->getMock('\Magento\Framework\App\Utility\Files', [], [], '', false);
         $filesUtil->expects($this->any())
             ->method('getStaticLibraryFiles')
             ->will($this->returnValue([]));

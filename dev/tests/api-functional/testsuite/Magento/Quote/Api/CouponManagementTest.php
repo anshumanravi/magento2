@@ -8,7 +8,6 @@
 namespace Magento\Quote\Api;
 
 use Magento\TestFramework\TestCase\WebapiAbstract;
-use Magento\Webapi\Model\Rest\Config as RestConfig;
 
 class CouponManagementTest extends WebapiAbstract
 {
@@ -39,7 +38,7 @@ class CouponManagementTest extends WebapiAbstract
         $serviceInfo = [
             'rest' => [
                 'resourcePath' => self::RESOURCE_PATH . $cartId . '/coupons/' ,
-                'httpMethod' => RestConfig::HTTP_METHOD_GET,
+                'httpMethod' => \Magento\Framework\Webapi\Rest\Request::HTTP_METHOD_GET,
             ],
             'soap' => [
                 'service' => self::SERVICE_NAME,
@@ -64,7 +63,7 @@ class CouponManagementTest extends WebapiAbstract
         $serviceInfo = [
             'rest' => [
                 'resourcePath' => self::RESOURCE_PATH . $cartId . '/coupons',
-                'httpMethod' => RestConfig::HTTP_METHOD_DELETE,
+                'httpMethod' => \Magento\Framework\Webapi\Rest\Request::HTTP_METHOD_DELETE,
             ],
             'soap' => [
                 'service' => self::SERVICE_NAME,
@@ -95,7 +94,7 @@ class CouponManagementTest extends WebapiAbstract
         $serviceInfo = [
             'rest' => [
                 'resourcePath' => self::RESOURCE_PATH . $cartId . '/coupons/' . $couponCode,
-                'httpMethod' => RestConfig::HTTP_METHOD_PUT,
+                'httpMethod' => \Magento\Framework\Webapi\Rest\Request::HTTP_METHOD_PUT,
             ],
             'soap' => [
                 'service' => self::SERVICE_NAME,
@@ -128,7 +127,7 @@ class CouponManagementTest extends WebapiAbstract
         $serviceInfo = [
             'rest' => [
                 'resourcePath' => self::RESOURCE_PATH . $cartId . '/coupons/' . $couponCode,
-                'httpMethod' => RestConfig::HTTP_METHOD_PUT,
+                'httpMethod' => \Magento\Framework\Webapi\Rest\Request::HTTP_METHOD_PUT,
             ],
             'soap' => [
                 'service' => self::SERVICE_NAME,
@@ -139,6 +138,149 @@ class CouponManagementTest extends WebapiAbstract
 
         $requestData = [
             "cartId" => $cartId,
+            "couponCode" => $couponCode,
+        ];
+
+        $this->assertTrue($this->_webApiCall($serviceInfo, $requestData));
+
+        $quoteWithCoupon = $this->objectManager->create('Magento\Quote\Model\Quote');
+        $quoteWithCoupon->load('test01', 'reserved_order_id');
+
+        $this->assertEquals($quoteWithCoupon->getCouponCode(), $couponCode);
+    }
+
+    /**
+     * @magentoApiDataFixture Magento/Checkout/_files/quote_with_coupon_saved.php
+     */
+    public function testGetMyCoupon()
+    {
+        $this->_markTestAsRestOnly();
+
+        // get customer ID token
+        /** @var \Magento\Integration\Service\V1\CustomerTokenServiceInterface $customerTokenService */
+        $customerTokenService = $this->objectManager->create(
+            'Magento\Integration\Service\V1\CustomerTokenServiceInterface'
+        );
+        $token = $customerTokenService->createCustomerAccessToken('customer@example.com', 'password');
+
+        /** @var \Magento\Quote\Model\Quote  $quote */
+        $quote = $this->objectManager->create('Magento\Quote\Model\Quote');
+        $quote->load('test_order_1', 'reserved_order_id');
+        $couponCode = $quote->getCouponCode();
+        $serviceInfo = [
+            'rest' => [
+                'resourcePath' => self::RESOURCE_PATH . 'mine/coupons' ,
+                'httpMethod' => \Magento\Framework\Webapi\Rest\Request::HTTP_METHOD_GET,
+                'token' => $token,
+            ],
+        ];
+
+        $requestData = [];
+        $this->assertEquals($couponCode, $this->_webApiCall($serviceInfo, $requestData));
+    }
+
+    /**
+     * @magentoApiDataFixture Magento/Checkout/_files/quote_with_coupon_saved.php
+     */
+    public function testDeleteMyCoupon()
+    {
+        $this->_markTestAsRestOnly();
+
+        // get customer ID token
+        /** @var \Magento\Integration\Service\V1\CustomerTokenServiceInterface $customerTokenService */
+        $customerTokenService = $this->objectManager->create(
+            'Magento\Integration\Service\V1\CustomerTokenServiceInterface'
+        );
+        $token = $customerTokenService->createCustomerAccessToken('customer@example.com', 'password');
+
+        /** @var \Magento\Quote\Model\Quote $quote */
+        $quote = $this->objectManager->create('Magento\Quote\Model\Quote');
+        $quote->load('test_order_1', 'reserved_order_id');
+        $serviceInfo = [
+            'rest' => [
+                'resourcePath' => self::RESOURCE_PATH . 'mine/coupons',
+                'httpMethod' => \Magento\Framework\Webapi\Rest\Request::HTTP_METHOD_DELETE,
+                'token' => $token,
+            ],
+        ];
+        $requestData = [];
+        $this->assertTrue($this->_webApiCall($serviceInfo, $requestData));
+        $quote->load('test_order_1', 'reserved_order_id');
+        $this->assertEquals('', $quote->getCouponCode());
+    }
+
+    /**
+     * @magentoApiDataFixture Magento/Checkout/_files/quote_with_address_saved.php
+     * @expectedException \Exception
+     * @expectedExceptionMessage Coupon code is not valid
+     */
+    public function testSetMyCouponThrowsExceptionIfCouponDoesNotExist()
+    {
+        $this->_markTestAsRestOnly();
+
+        // get customer ID token
+        /** @var \Magento\Integration\Service\V1\CustomerTokenServiceInterface $customerTokenService */
+        $customerTokenService = $this->objectManager->create(
+            'Magento\Integration\Service\V1\CustomerTokenServiceInterface'
+        );
+        $token = $customerTokenService->createCustomerAccessToken('customer@example.com', 'password');
+
+        $couponCode = 'invalid_coupon_code';
+
+        $serviceInfo = [
+            'rest' => [
+                'resourcePath' => self::RESOURCE_PATH . 'mine/coupons/' . $couponCode,
+                'httpMethod' => \Magento\Framework\Webapi\Rest\Request::HTTP_METHOD_PUT,
+                'token' => $token,
+            ],
+        ];
+
+        $requestData = [
+            "couponCode" => $couponCode,
+        ];
+
+        $this->_webApiCall($serviceInfo, $requestData);
+    }
+
+    /**
+     * @magentoApiDataFixture Magento/Customer/_files/customer.php
+     * @magentoApiDataFixture Magento/Sales/_files/quote.php
+     * @magentoApiDataFixture Magento/Checkout/_files/discount_10percent_generalusers.php
+     */
+    public function testSetMyCouponSuccess()
+    {
+        $this->_markTestAsRestOnly();
+
+        // get customer ID token
+        /** @var \Magento\Integration\Service\V1\CustomerTokenServiceInterface $customerTokenService */
+        $customerTokenService = $this->objectManager->create(
+            'Magento\Integration\Service\V1\CustomerTokenServiceInterface'
+        );
+        $token = $customerTokenService->createCustomerAccessToken('customer@example.com', 'password');
+
+        /** @var \Magento\Quote\Model\Quote $quote */
+        $quote = $this->objectManager->create('Magento\Quote\Model\Quote');
+        $quote->load('test01', 'reserved_order_id');
+        $cartId = $quote->getId();
+        $salesRule = $this->objectManager->create('Magento\SalesRule\Model\Rule');
+        $salesRule->load('Test Coupon for General', 'name');
+        $couponCode = $salesRule->getCouponCode();
+
+        /* Since this isn't a full quote fixture, need to assign it to the right customer */
+        $cartManagementService = $this->objectManager->create(
+            'Magento\Quote\Api\CartManagementInterface'
+        );
+        $cartManagementService->assignCustomer($cartId, 1, 1);
+
+        $serviceInfo = [
+            'rest' => [
+                'resourcePath' => self::RESOURCE_PATH . 'mine/coupons/' . $couponCode,
+                'httpMethod' => \Magento\Framework\Webapi\Rest\Request::HTTP_METHOD_PUT,
+                'token' => $token,
+            ],
+        ];
+
+        $requestData = [
             "couponCode" => $couponCode,
         ];
 

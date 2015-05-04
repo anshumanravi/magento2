@@ -412,12 +412,13 @@ abstract class AbstractElement extends AbstractForm
      */
     public function getLabelHtml($idSuffix = '')
     {
-        if (!is_null($this->getLabel())) {
-            $html = '<label class="label" for="' . $this->getHtmlId() . $idSuffix . '"' . $this->_getUiId(
-                'label'
-            ) . '><span>' . $this->_escape(
-                $this->getLabel()
-            ) . '</span></label>' . "\n";
+        if ($this->getLabel() !== null) {
+            $html = '<label class="label admin__field-label" for="' .
+                $this->getHtmlId() . $idSuffix . '"' . $this->_getUiId(
+                    'label'
+                ) . '><span>' . $this->_escape(
+                    $this->getLabel()
+                ) . '</span></label>' . "\n";
         } else {
             $html = '';
         }
@@ -432,7 +433,7 @@ abstract class AbstractElement extends AbstractForm
     public function getDefaultHtml()
     {
         $html = $this->getData('default_html');
-        if (is_null($html)) {
+        if ($html === null) {
             $html = $this->getNoSpan() === true ? '' : '<span class="field-row">' . "\n";
             $html .= $this->getLabelHtml();
             $html .= $this->getElementHtml();
@@ -449,7 +450,7 @@ abstract class AbstractElement extends AbstractForm
     public function getHtml()
     {
         if ($this->getRequired()) {
-            $this->addClass('required-entry');
+            $this->addClass('required-entry _required');
         }
         if ($this->_renderer) {
             $html = $this->_renderer->render($this);

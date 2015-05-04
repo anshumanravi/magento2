@@ -59,7 +59,7 @@ class Types extends \Magento\Backend\App\Action
             $this->_objectManager->create('Magento\GoogleShopping\Model\Type')
         );
         $typeId = $this->getRequest()->getParam('id');
-        if (!is_null($typeId)) {
+        if ($typeId !== null) {
             $this->_coreRegistry->registry('current_item_type')->load($typeId);
         }
         return $this;
@@ -68,21 +68,16 @@ class Types extends \Magento\Backend\App\Action
     /**
      * Initialize general settings for action
      *
-     * @return $this
+     * @return \Magento\Backend\Model\View\Result\Page
      */
-    protected function _initAction()
+    protected function initPage()
     {
-        $this->_view->loadLayout();
-        $this->_setActiveMenu(
-            'Magento_GoogleShopping::catalog_googleshopping_types'
-        )->_addBreadcrumb(
-            __('Catalog'),
-            __('Catalog')
-        )->_addBreadcrumb(
-            __('Google Content'),
-            __('Google Content')
-        );
-        return $this;
+        /** @var \Magento\Backend\Model\View\Result\Page $resultPage */
+        $resultPage = $this->resultFactory->create(\Magento\Framework\Controller\ResultFactory::TYPE_PAGE);
+        $resultPage->setActiveMenu('Magento_GoogleShopping::catalog_googleshopping_types')
+            ->addBreadcrumb(__('Catalog'), __('Catalog'))
+            ->addBreadcrumb(__('Google Content'), __('Google Content'));
+        return $resultPage;
     }
 
     /**

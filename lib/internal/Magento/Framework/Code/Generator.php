@@ -32,6 +32,11 @@ class Generator
     protected $definedClasses;
 
     /**
+     * @var \Magento\Framework\ObjectManagerInterface
+     */
+    protected $objectManager;
+
+    /**
      * @param Generator\Io   $ioObject
      * @param array          $generatedEntities
      * @param DefinedClasses $definedClasses
@@ -64,7 +69,7 @@ class Generator
      *
      * @param string $className
      * @return string
-     * @throws \Magento\Framework\Exception
+     * @throws \Magento\Framework\Exception\LocalizedException
      * @throws \InvalidArgumentException
      */
     public function generateClass($className)
@@ -86,21 +91,20 @@ class Generator
         }
         if (!$entity || !$entityName) {
             return self::GENERATION_ERROR;
-        }
-
-        if ($this->definedClasses->classLoadable($className)) {
+        } else if ($this->definedClasses->classLoadable($className)) {
             return self::GENERATION_SKIP;
-        }
-
-        if (!isset($this->_generatedEntities[$entity])) {
+        } else if (!isset($this->_generatedEntities[$entity])) {
             throw new \InvalidArgumentException('Unknown generation entity.');
         }
         $generatorClass = $this->_generatedEntities[$entity];
         /** @var EntityAbstract $generator */
         $generator = $this->createGeneratorInstance($generatorClass, $entityName, $className);
+        $this->tryToLoadSourceClass($className, $generator);
         if (!($file = $generator->generate())) {
             $errors = $generator->getErrors();
-            throw new \Magento\Framework\Exception(implode(' ', $errors));
+            throw new \Magento\Framework\Exception\LocalizedException(
+                new \Magento\Framework\Phrase(implode(' ', $errors))
+            );
         }
         $this->includeFile($file);
         return self::GENERATION_SUCCESS;
@@ -125,6 +129,60 @@ class Generator
      */
     protected function createGeneratorInstance($generatorClass, $entityName, $className)
     {
-        return new $generatorClass($entityName, $className, $this->_ioObject);
+        return $this->getObjectManager()->create(
+            $generatorClass,
+            ['sourceClassName' => $entityName, 'resultClassName' => $className, 'ioObject' => $this->_ioObject]
+        );
+    }
+
+    /**
+     * Set object manager instance.
+     *
+     * @param \Magento\Framework\ObjectManagerInterface $objectManager
+     * @return $this
+     */
+    public function setObjectManager(\Magento\Framework\ObjectManagerInterface $objectManager)
+    {
+        $this->objectManager = $objectManager;
+        return $this;
+    }
+
+    /**
+     * Get object manager instance.
+     *
+     * @return \Magento\Framework\ObjectManagerInterface
+     */
+    public function getObjectManager()
+    {
+        if (!($this->objectManager instanceof \Magento\Framework\ObjectManagerInterface)) {
+            throw new \LogicException(
+                "Object manager was expected to be set using setObjectManger() "
+                . "before getObjectManager() invocation."
+            );
+        }
+        return $this->objectManager;
+    }
+
+    /**
+     * Try to load/generate source class to check if it is valid or not.
+     *
+     * @param string $className
+     * @param \Magento\Framework\Code\Generator\EntityAbstract $generator
+     * @return void
+     * @throws \Magento\Framework\Exception\LocalizedException
+     */
+    protected function tryToLoadSourceClass($className, $generator)
+    {
+        $sourceClassName = $generator->getSourceClassName();
+        if (!$this->definedClasses->classLoadable($sourceClassName)) {
+            if ($this->generateClass($sourceClassName) !== self::GENERATION_SUCCESS) {
+                throw new \Magento\Framework\Exception\LocalizedException(
+                    new \Magento\Framework\Phrase(
+                        'Source class "%1" for "%2" generation does not exist.',
+                        [$sourceClassName, $className]
+                    )
+                );
+            }
+        }
     }
 }

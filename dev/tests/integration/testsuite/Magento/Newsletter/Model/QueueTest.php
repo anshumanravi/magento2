@@ -5,17 +5,22 @@
  */
 namespace Magento\Newsletter\Model;
 
+use Magento\Store\Model\ScopeInterface;
+
 class QueueTest extends \PHPUnit_Framework_TestCase
 {
     /**
      * @magentoDataFixture Magento/Newsletter/_files/queue.php
-     * @magentoConfigFixture fixturestore_store general/locale/code de_DE
      * @magentoAppIsolation enabled
      */
     public function testSendPerSubscriber()
     {
         /** @var $objectManager \Magento\TestFramework\ObjectManager */
         $objectManager = \Magento\TestFramework\Helper\Bootstrap::getObjectManager();
+
+        /** @var \Magento\Framework\App\Config\MutableScopeConfigInterface $mutableConfig */
+        $mutableConfig = $objectManager->get('Magento\Framework\App\Config\MutableScopeConfigInterface');
+        $mutableConfig->setValue('general/locale/code', 'de_DE', ScopeInterface::SCOPE_STORE, 'fixturestore');
 
         $objectManager->get('Magento\Framework\App\State')->setAreaCode(\Magento\Framework\App\Area::AREA_FRONTEND);
         $area = $objectManager->get('Magento\Framework\App\AreaList')
@@ -63,13 +68,9 @@ class QueueTest extends \PHPUnit_Framework_TestCase
         $objectManager = \Magento\TestFramework\Helper\Bootstrap::getObjectManager();
 
         $transport = $this->getMock('\Magento\Framework\Mail\TransportInterface');
-        $transport->expects(
-            $this->any()
-        )->method(
-            'sendMessage'
-        )->will(
-            $this->throwException(new \Magento\Framework\Mail\Exception($errorMsg, 99))
-        );
+        $transport->expects($this->any())
+            ->method('sendMessage')
+            ->willThrowException(new \Magento\Framework\Exception\MailException(__($errorMsg)));
 
         $builder = $this->getMock(
             '\Magento\Newsletter\Model\Queue\TransportBuilder',
@@ -95,7 +96,6 @@ class QueueTest extends \PHPUnit_Framework_TestCase
 
         $problem->load($queue->getId(), 'queue_id');
         $this->assertNotEmpty($problem->getId());
-        $this->assertEquals(99, $problem->getProblemErrorCode());
         $this->assertEquals($errorMsg, $problem->getProblemErrorText());
     }
 }

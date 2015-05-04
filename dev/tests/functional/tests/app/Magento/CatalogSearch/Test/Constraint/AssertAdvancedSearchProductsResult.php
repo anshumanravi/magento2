@@ -15,10 +15,6 @@ use Magento\Mtf\Constraint\AbstractConstraint;
  */
 class AssertAdvancedSearchProductsResult extends AbstractConstraint
 {
-    /* tags */
-    const SEVERITY = 'high';
-    /* end tags */
-
     /**
      * Text for notice messages
      */
@@ -73,9 +69,9 @@ class AssertAdvancedSearchProductsResult extends AbstractConstraint
         foreach ($searchResult as $sku => $product) {
             /** @var CatalogProductSimple $product */
             $name = $product->getName();
-            $isProductVisible = $resultPage->getListProductBlock()->isProductVisible($product->getName());
+            $isProductVisible = $resultPage->getListProductBlock()->getProductItem($product)->isVisible();
             while (!$isProductVisible && $resultPage->getBottomToolbar()->nextPage()) {
-                $isProductVisible = $resultPage->getListProductBlock()->isProductVisible($product->getName());
+                $isProductVisible = $resultPage->getListProductBlock()->getProductItem($product)->isVisible();
             }
             if (!$isProductVisible) {
                 $errors[] = '- failed to find the product (SKU - "'

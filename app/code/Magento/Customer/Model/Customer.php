@@ -13,7 +13,9 @@ use Magento\Customer\Model\Resource\Customer as ResourceCustomer;
 use Magento\Customer\Api\Data\CustomerInterfaceFactory;
 use Magento\Customer\Model\Data\Customer as CustomerData;
 use Magento\Framework\Reflection\DataObjectProcessor;
-use Magento\Framework\Api\AttributeValueFactory;
+use Magento\Framework\Exception\EmailNotConfirmedException;
+use Magento\Framework\Exception\InvalidEmailOrPasswordException;
+use Magento\Framework\Exception\AuthenticationException;
 
 /**
  * Customer model
@@ -36,7 +38,7 @@ use Magento\Framework\Api\AttributeValueFactory;
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
-class Customer extends \Magento\Framework\Model\AbstractExtensibleModel
+class Customer extends \Magento\Framework\Model\AbstractModel
 {
     /**
      * Configuration paths for email templates and identities
@@ -60,17 +62,6 @@ class Customer extends \Magento\Framework\Model\AbstractExtensibleModel
     const XML_PATH_CONFIRMED_EMAIL_TEMPLATE = 'customer/create_account/email_confirmed_template';
 
     const XML_PATH_GENERATE_HUMAN_FRIENDLY_ID = 'customer/create_account/generate_human_friendly_id';
-
-    /**
-     * Codes of exceptions related to customer model
-     */
-    const EXCEPTION_EMAIL_NOT_CONFIRMED = 1;
-
-    const EXCEPTION_INVALID_EMAIL_OR_PASSWORD = 2;
-
-    const EXCEPTION_EMAIL_EXISTS = 3;
-
-    const EXCEPTION_INVALID_RESET_PASSWORD_LINK_TOKEN = 4;
 
     const SUBSCRIBED_YES = 'yes';
 
@@ -168,11 +159,6 @@ class Customer extends \Magento\Framework\Model\AbstractExtensibleModel
     protected $_transportBuilder;
 
     /**
-     * @var AttributeFactory
-     */
-    protected $_attributeFactory;
-
-    /**
      * @var GroupRepositoryInterface
      */
     protected $_groupRepository;
@@ -208,17 +194,20 @@ class Customer extends \Magento\Framework\Model\AbstractExtensibleModel
     protected $dataObjectHelper;
 
     /**
+     * @var \Magento\Customer\Api\CustomerMetadataInterface
+     */
+    protected $metadataService;
+
+    /**
      * @param \Magento\Framework\Model\Context $context
      * @param \Magento\Framework\Registry $registry
-     * @param \Magento\Framework\Api\MetadataServiceInterface $metadataService
-     * @param AttributeValueFactory $customAttributeFactory
      * @param \Magento\Store\Model\StoreManagerInterface $storeManager
      * @param \Magento\Eav\Model\Config $config
      * @param \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig
-     * @param Resource\Customer $resource
-     * @param Config\Share $configShare
+     * @param ResourceCustomer $resource
+     * @param Share $configShare
      * @param AddressFactory $addressFactory
-     * @param Resource\Address\CollectionFactory $addressesFactory
+     * @param CollectionFactory $addressesFactory
      * @param \Magento\Framework\Mail\Template\TransportBuilder $transportBuilder
      * @param GroupRepositoryInterface $groupRepository
      * @param AttributeFactory $attributeFactory
@@ -227,6 +216,7 @@ class Customer extends \Magento\Framework\Model\AbstractExtensibleModel
      * @param CustomerInterfaceFactory $customerDataFactory
      * @param DataObjectProcessor $dataObjectProcessor
      * @param \Magento\Framework\Api\DataObjectHelper $dataObjectHelper
+     * @param CustomerMetadataInterface $metadataService
      * @param \Magento\Framework\Data\Collection\Db $resourceCollection
      * @param array $data
      * @SuppressWarnings(PHPMD.ExcessiveParameterList)
@@ -234,8 +224,6 @@ class Customer extends \Magento\Framework\Model\AbstractExtensibleModel
     public function __construct(
         \Magento\Framework\Model\Context $context,
         \Magento\Framework\Registry $registry,
-        \Magento\Framework\Api\MetadataServiceInterface $metadataService,
-        AttributeValueFactory $customAttributeFactory,
         \Magento\Store\Model\StoreManagerInterface $storeManager,
         \Magento\Eav\Model\Config $config,
         \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig,
@@ -245,15 +233,16 @@ class Customer extends \Magento\Framework\Model\AbstractExtensibleModel
         \Magento\Customer\Model\Resource\Address\CollectionFactory $addressesFactory,
         \Magento\Framework\Mail\Template\TransportBuilder $transportBuilder,
         GroupRepositoryInterface $groupRepository,
-        AttributeFactory $attributeFactory,
         \Magento\Framework\Encryption\EncryptorInterface $encryptor,
         \Magento\Framework\Stdlib\DateTime $dateTime,
         CustomerInterfaceFactory $customerDataFactory,
         DataObjectProcessor $dataObjectProcessor,
         \Magento\Framework\Api\DataObjectHelper $dataObjectHelper,
+        \Magento\Customer\Api\CustomerMetadataInterface $metadataService,
         \Magento\Framework\Data\Collection\Db $resourceCollection = null,
         array $data = []
     ) {
+        $this->metadataService = $metadataService;
         $this->_scopeConfig = $scopeConfig;
         $this->_storeManager = $storeManager;
         $this->_config = $config;
@@ -262,7 +251,6 @@ class Customer extends \Magento\Framework\Model\AbstractExtensibleModel
         $this->_addressesFactory = $addressesFactory;
         $this->_transportBuilder = $transportBuilder;
         $this->_groupRepository = $groupRepository;
-        $this->_attributeFactory = $attributeFactory;
         $this->_encryptor = $encryptor;
         $this->dateTime = $dateTime;
         $this->customerDataFactory = $customerDataFactory;
@@ -271,8 +259,6 @@ class Customer extends \Magento\Framework\Model\AbstractExtensibleModel
         parent::__construct(
             $context,
             $registry,
-            $metadataService,
-            $customAttributeFactory,
             $resource,
             $resourceCollection,
             $data
@@ -303,7 +289,11 @@ class Customer extends \Magento\Framework\Model\AbstractExtensibleModel
             $addressesData[] = $address->getDataModel();
         }
         $customerDataObject = $this->customerDataFactory->create();
-        $this->dataObjectHelper->populateWithArray($customerDataObject, $customerData);
+        $this->dataObjectHelper->populateWithArray(
+            $customerDataObject,
+            $customerData,
+            '\Magento\Customer\Api\Data\CustomerInterface'
+        );
         $customerDataObject->setAddresses($addressesData)
             ->setId($this->getId());
         return $customerDataObject;
@@ -330,7 +320,7 @@ class Customer extends \Magento\Framework\Model\AbstractExtensibleModel
         }
 
         $customAttributes = $customer->getCustomAttributes();
-        if (!is_null($customAttributes)) {
+        if ($customAttributes !== null) {
             foreach ($customAttributes as $attribute) {
                 $this->setDataUsingMethod($attribute->getAttributeCode(), $attribute->getValue());
             }
@@ -367,22 +357,20 @@ class Customer extends \Magento\Framework\Model\AbstractExtensibleModel
      * @param  string $login
      * @param  string $password
      * @return bool
-     * @throws \Magento\Framework\Model\Exception
+     * @throws \Magento\Framework\Exception\LocalizedException
      * @deprecated Use \Magento\Customer\Api\AccountManagementInterface::authenticate
      */
     public function authenticate($login, $password)
     {
         $this->loadByEmail($login);
         if ($this->getConfirmation() && $this->isConfirmationRequired()) {
-            throw new \Magento\Framework\Model\Exception(
-                __('This account is not confirmed.'),
-                self::EXCEPTION_EMAIL_NOT_CONFIRMED
+            throw new EmailNotConfirmedException(
+                __('This account is not confirmed.')
             );
         }
         if (!$this->validatePassword($password)) {
-            throw new \Magento\Framework\Model\Exception(
-                __('Invalid login or password.'),
-                self::EXCEPTION_INVALID_EMAIL_OR_PASSWORD
+            throw new InvalidEmailOrPasswordException(
+                __('Invalid login or password.')
             );
         }
         $this->_eventManager->dispatch(
@@ -431,11 +419,19 @@ class Customer extends \Magento\Framework\Model\AbstractExtensibleModel
         $customerData = (array)$this->getData();
         $customerData[CustomerData::ID] = $this->getId();
         $dataObject = $this->customerDataFactory->create();
-        $this->dataObjectHelper->populateWithArray($dataObject, $customerData);
+        $this->dataObjectHelper->populateWithArray(
+            $dataObject,
+            $customerData,
+            '\Magento\Customer\Api\Data\CustomerInterface'
+        );
         $customerOrigData = (array)$this->getOrigData();
         $customerOrigData[CustomerData::ID] = $this->getId();
         $origDataObject = $this->customerDataFactory->create();
-        $this->dataObjectHelper->populateWithArray($origDataObject, $customerOrigData);
+        $this->dataObjectHelper->populateWithArray(
+            $origDataObject,
+            $customerOrigData,
+            '\Magento\Customer\Api\Data\CustomerInterface'
+        );
         $this->_eventManager->dispatch(
             'customer_save_after_data_object',
             ['customer_data_object' => $dataObject, 'orig_customer_data_object' => $origDataObject]
@@ -729,7 +725,7 @@ class Customer extends \Magento\Framework\Model\AbstractExtensibleModel
 
         $primaryShipping = $this->getPrimaryShippingAddress();
         if ($primaryShipping) {
-            if ($primaryBilling->getId() == $primaryShipping->getId()) {
+            if ($primaryBilling && $primaryBilling->getId() == $primaryShipping->getId()) {
                 $primaryBilling->setIsPrimaryShipping(true);
             } else {
                 $primaryShipping->setIsPrimaryShipping(true);
@@ -777,14 +773,14 @@ class Customer extends \Magento\Framework\Model\AbstractExtensibleModel
      * @param string $backUrl
      * @param string $storeId
      * @return $this
-     * @throws \Magento\Framework\Model\Exception
+     * @throws \Magento\Framework\Exception\LocalizedException
      */
     public function sendNewAccountEmail($type = 'registered', $backUrl = '', $storeId = '0')
     {
         $types = $this->getTemplateTypes();
 
         if (!isset($types[$type])) {
-            throw new \Magento\Framework\Model\Exception(__('Wrong transactional account email type'));
+            throw new \Magento\Framework\Exception\LocalizedException(__('Wrong transactional account email type'));
         }
 
         if (!$storeId) {
@@ -1025,21 +1021,24 @@ class Customer extends \Magento\Framework\Model\AbstractExtensibleModel
         }
 
         $entityType = $this->_config->getEntityType('customer');
-        $attribute = $this->_createCustomerAttribute();
-        $attribute->loadByCode($entityType, 'dob');
+        $attribute = $this->_config->getAttribute($entityType, 'dob');
         if ($attribute->getIsRequired() && '' == trim($this->getDob())) {
             $errors[] = __('The Date of Birth is required.');
         }
-        $attribute = $this->_createCustomerAttribute();
-        $attribute->loadByCode($entityType, 'taxvat');
+        $attribute = $this->_config->getAttribute($entityType, 'taxvat');
         if ($attribute->getIsRequired() && '' == trim($this->getTaxvat())) {
             $errors[] = __('The TAX/VAT number is required.');
         }
-        $attribute = $this->_createCustomerAttribute();
-        $attribute->loadByCode($entityType, 'gender');
+        $attribute = $this->_config->getAttribute($entityType, 'gender');
         if ($attribute->getIsRequired() && '' == trim($this->getGender())) {
             $errors[] = __('Gender is required.');
         }
+
+        $transport = new \Magento\Framework\Object(
+            ['errors' => $errors]
+        );
+        $this->_eventManager->dispatch('customer_validate', ['customer' => $this, 'transport' => $transport]);
+        $errors = $transport->getErrors();
 
         if (empty($errors)) {
             return true;
@@ -1123,7 +1122,7 @@ class Customer extends \Magento\Framework\Model\AbstractExtensibleModel
     {
         $date = $this->getCreatedAt();
         if ($date) {
-            return $this->dateTime->toTimestamp($date);
+            return (new \DateTime($date))->getTimestamp();
         }
         return null;
     }
@@ -1258,14 +1257,13 @@ class Customer extends \Magento\Framework\Model\AbstractExtensibleModel
      *
      * @param string $passwordLinkToken
      * @return $this
-     * @throws \Magento\Framework\Model\Exception
+     * @throws \Magento\Framework\Exception\AuthenticationException
      */
     public function changeResetPasswordLinkToken($passwordLinkToken)
     {
         if (!is_string($passwordLinkToken) || empty($passwordLinkToken)) {
-            throw new \Magento\Framework\Model\Exception(
-                __('Invalid password reset token.'),
-                self::EXCEPTION_INVALID_RESET_PASSWORD_LINK_TOKEN
+            throw new AuthenticationException(
+                __('Invalid password reset token.')
             );
         }
         $this->_getResource()->changeResetPasswordLinkToken($this, $passwordLinkToken);
@@ -1289,8 +1287,8 @@ class Customer extends \Magento\Framework\Model\AbstractExtensibleModel
 
         $expirationPeriod = $this->getResetPasswordLinkExpirationPeriod();
 
-        $currentTimestamp = $this->dateTime->toTimestamp($this->dateTime->now());
-        $tokenTimestamp = $this->dateTime->toTimestamp($linkTokenCreatedAt);
+        $currentTimestamp = (new \DateTime())->getTimestamp();
+        $tokenTimestamp = (new \DateTime($linkTokenCreatedAt))->getTimestamp();
         if ($tokenTimestamp > $currentTimestamp) {
             return true;
         }
@@ -1330,14 +1328,6 @@ class Customer extends \Magento\Framework\Model\AbstractExtensibleModel
     protected function _createAddressCollection()
     {
         return $this->_addressesFactory->create();
-    }
-
-    /**
-     * @return \Magento\Customer\Model\Attribute
-     */
-    protected function _createCustomerAttribute()
-    {
-        return $this->_attributeFactory->create();
     }
 
     /**

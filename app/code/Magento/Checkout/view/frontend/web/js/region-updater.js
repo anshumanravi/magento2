@@ -15,8 +15,8 @@ define([
     $.widget('mage.regionUpdater', {
         options: {
             regionTemplate:
-                '<option value="<%= data.value %>" title="<%= data.title %>" <% if (data.isSelected) { %>selected="selected"<% } %>>' +
-                    '<%= data.title %>' +
+                '<option value="<%- data.value %>" title="<%- data.title %>" <% if (data.isSelected) { %>selected="selected"<% } %>>' +
+                    '<%- data.title %>' +
                 '</option>',
             isRegionRequired: true,
             isZipRequired: true,
@@ -110,6 +110,8 @@ define([
                 if (!this.options.form) {
                     this.options.form = this.element.closest('form').length ? $(this.element.closest('form')[0]) : null;
                 }
+
+                this.options.form = $(this.options.form);
 
                 this.options.form && this.options.form.data('validation') && this.options.form.validation('clearError',
                     this.options.regionListId, this.options.regionInputId, this.options.postcodeId);

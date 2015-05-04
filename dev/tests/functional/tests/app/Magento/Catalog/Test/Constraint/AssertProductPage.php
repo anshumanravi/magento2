@@ -18,10 +18,6 @@ use Magento\Mtf\Fixture\FixtureInterface;
  */
 class AssertProductPage extends AbstractAssertForm
 {
-    /* tags */
-    const SEVERITY = 'middle';
-    /* end tags */
-
     /**
      * Product view block on frontend page
      *
@@ -114,14 +110,15 @@ class AssertProductPage extends AbstractAssertForm
             return null;
         }
 
-        $fixtureProductPrice = number_format($this->product->getPrice(), 2);
-        $formProductPrice = $this->productView->getPriceBlock()->getRegularPrice();
+        $priceBlock = $this->productView->getPriceBlock();
+        $formPrice = $priceBlock->isOldPriceVisible() ? $priceBlock->getOldPrice() : $priceBlock->getPrice();
+        $fixturePrice = number_format($this->product->getPrice(), 2, '.', '');
 
-        if ($fixtureProductPrice == $formProductPrice) {
-            return null;
+        if ($fixturePrice != $formPrice) {
+            return "Displayed product price on product page(front-end) not equals passed from fixture. "
+                . "Actual: {$fixturePrice}, expected: {$formPrice}.";
         }
-        return "Displayed product price on product page(front-end) not equals passed from fixture. "
-        . "Actual: {$formProductPrice}, expected: {$fixtureProductPrice}.";
+        return null;
     }
 
     /**
@@ -154,7 +151,7 @@ class AssertProductPage extends AbstractAssertForm
         $fixtureProductSku = $this->product->getSku();
         $formProductSku = $this->productView->getProductSku();
 
-        if ($fixtureProductSku == $formProductSku) {
+        if ($fixtureProductSku === null || $fixtureProductSku == $formProductSku) {
             return null;
         }
         return "Displayed product sku on product page(front-end) not equals passed from fixture. "

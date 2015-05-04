@@ -8,6 +8,8 @@ namespace Magento\Catalog\Model\Product\Option\Type\File;
 
 use Magento\Catalog\Model\Product;
 use Magento\Framework\App\Filesystem\DirectoryList;
+use Magento\Catalog\Model\Product\Exception as ProductException;
+use Magento\Framework\Exception\LocalizedException;
 
 /**
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
@@ -60,7 +62,7 @@ class ValidatorFile extends Validator
      * @param \Magento\Framework\Filesystem $filesystem
      * @param \Magento\Framework\File\Size $fileSize
      * @param \Magento\Framework\HTTP\Adapter\FileTransferFactory $httpFactory
-     * @throws \Magento\Framework\Filesystem\FilesystemException
+     * @throws \Magento\Framework\Exception\FileSystemException
      */
     public function __construct(
         \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig,
@@ -88,9 +90,14 @@ class ValidatorFile extends Validator
      * @param \Magento\Framework\Object $processingParams
      * @param \Magento\Catalog\Model\Product\Option $option
      * @return array
-     * @throws \Magento\Framework\Model\Exception
+     * @throws LocalizedException
+     * @throws ProductException
+     * @throws \Exception
+     * @throws \Magento\Framework\Exception\InputException
+     * @throws \Magento\Framework\Validator\Exception
      * @throws \Zend_File_Transfer_Exception
      * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+     * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
      */
     public function validate($processingParams, $option)
     {
@@ -99,22 +106,24 @@ class ValidatorFile extends Validator
         try {
             $runValidation = $option->getIsRequire() || $upload->isUploaded($file);
             if (!$runValidation) {
-                throw new RunValidationException();
+                throw new \Magento\Framework\Validator\Exception(
+                    __('Validation failed. Required options were not filled or file was not uploaded.')
+                );
             }
 
             $fileInfo = $upload->getFileInfo($file)[$file];
             $fileInfo['title'] = $fileInfo['name'];
-        } catch (RunValidationException $r) {
-            throw $r;
+        } catch (\Magento\Framework\Validator\Exception $e) {
+            throw $e;
         } catch (\Exception $e) {
             // when file exceeds the upload_max_filesize, $_FILES is empty
             if ($this->validateContentLength()) {
                 $value = $this->fileSize->getMaxFileSizeInMb();
-                throw new LargeSizeException(
-                    __("The file you uploaded is larger than %1 Megabytes allowed by server", $value)
+                throw new LocalizedException(
+                    __('The file you uploaded is larger than %1 Megabytes allowed by server', $value)
                 );
             } else {
-                throw new OptionRequiredException();
+                throw new ProductException(__('Option required.'));
             }
         }
 
@@ -132,8 +141,8 @@ class ValidatorFile extends Validator
         if ($upload->isUploaded($file) && $upload->isValid($file)) {
             $extension = pathinfo(strtolower($fileInfo['name']), PATHINFO_EXTENSION);
 
-            $fileName = \Magento\Core\Model\File\Uploader::getCorrectFileName($fileInfo['name']);
-            $dispersion = \Magento\Core\Model\File\Uploader::getDispretionPath($fileName);
+            $fileName = \Magento\MediaStorage\Model\File\Uploader::getCorrectFileName($fileInfo['name']);
+            $dispersion = \Magento\MediaStorage\Model\File\Uploader::getDispretionPath($fileName);
 
             $filePath = $dispersion;
 
@@ -144,8 +153,7 @@ class ValidatorFile extends Validator
 
             $upload->addFilter(new \Zend_Filter_File_Rename(['target' => $fileFullPath, 'overwrite' => true]));
 
-            // TODO: I don't know how change this
-            if (!is_null($this->product)) {
+            if ($this->product !== null) {
                 $this->product->getTypeInstance()->addFileQueue(
                     [
                         'operation' => 'receive_uploaded_file',
@@ -183,10 +191,10 @@ class ValidatorFile extends Validator
             $errors = $this->getValidatorErrors($upload->getErrors(), $fileInfo, $option);
 
             if (count($errors) > 0) {
-                throw new Exception(implode("\n", $errors));
+                throw new LocalizedException(__(implode("\n", $errors)));
             }
         } else {
-            throw new Exception(__('Please specify the product\'s required option(s).'));
+            throw new LocalizedException(__('Please specify the product\'s required option(s).'));
         }
         return $userValue;
     }

@@ -27,31 +27,23 @@ class Save extends \Magento\Catalog\Controller\Adminhtml\Product
     protected $productTypeManager;
 
     /**
-     * @var \Magento\Backend\Model\View\Result\RedirectFactory
-     */
-    protected $resultRedirectFactory;
-
-    /**
      * @param Action\Context $context
      * @param Builder $productBuilder
      * @param Initialization\Helper $initializationHelper
      * @param \Magento\Catalog\Model\Product\Copier $productCopier
      * @param \Magento\Catalog\Model\Product\TypeTransitionManager $productTypeManager
-     * @param \Magento\Backend\Model\View\Result\RedirectFactory $resultRedirectFactory
      */
     public function __construct(
         \Magento\Backend\App\Action\Context $context,
         Product\Builder $productBuilder,
         Initialization\Helper $initializationHelper,
         \Magento\Catalog\Model\Product\Copier $productCopier,
-        \Magento\Catalog\Model\Product\TypeTransitionManager $productTypeManager,
-        \Magento\Backend\Model\View\Result\RedirectFactory $resultRedirectFactory
+        \Magento\Catalog\Model\Product\TypeTransitionManager $productTypeManager
     ) {
         $this->initializationHelper = $initializationHelper;
         $this->productCopier = $productCopier;
         $this->productTypeManager = $productTypeManager;
         parent::__construct($context, $productBuilder);
-        $this->resultRedirectFactory = $resultRedirectFactory;
     }
 
     /**
@@ -74,7 +66,7 @@ class Save extends \Magento\Catalog\Controller\Adminhtml\Product
                 $this->productTypeManager->processProduct($product);
 
                 if (isset($data['product'][$product->getIdFieldName()])) {
-                    throw new \Magento\Framework\Model\Exception(__('Unable to save product'));
+                    throw new \Magento\Framework\Exception\LocalizedException(__('Unable to save product'));
                 }
 
                 $originalSku = $product->getSku();
@@ -114,7 +106,7 @@ class Save extends \Magento\Catalog\Controller\Adminhtml\Product
                     $newProduct = $this->productCopier->copy($product);
                     $this->messageManager->addSuccess(__('You duplicated the product.'));
                 }
-            } catch (\Magento\Framework\Model\Exception $e) {
+            } catch (\Magento\Framework\Exception\LocalizedException $e) {
                 $this->messageManager->addError($e->getMessage());
                 $this->_session->setProductData($data);
                 $redirectBack = $productId ? true : 'new';

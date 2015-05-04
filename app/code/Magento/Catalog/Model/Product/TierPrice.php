@@ -32,4 +32,69 @@ class TierPrice extends \Magento\Framework\Model\AbstractExtensibleModel impleme
     {
         return $this->getData(self::VALUE);
     }
+
+    /**
+     * Set tier qty
+     *
+     * @param float $qty
+     * @return $this
+     */
+    public function setQty($qty)
+    {
+        return $this->setData(self::QTY, $qty);
+    }
+
+    /**
+     * Set price value
+     *
+     * @param float $value
+     * @return $this
+     */
+    public function setValue($value)
+    {
+        return $this->setData(self::VALUE, $value);
+    }
+
+    /**
+     * Retrieve customer group id
+     *
+     * @return int
+     */
+    public function getCustomerGroupId()
+    {
+        return $this->getData(self::CUSTOMER_GROUP_ID);
+    }
+
+    /**
+     * Set customer group id
+     *
+     * @param int $customerGroupId
+     * @return $this
+     */
+    public function setCustomerGroupId($customerGroupId)
+    {
+        return $this->setData(self::CUSTOMER_GROUP_ID, $customerGroupId);
+    }
+
+    /**
+     * {@inheritdoc}
+     *
+     * @return \Magento\Catalog\Api\Data\ProductTierPriceExtensionInterface|null
+     */
+    public function getExtensionAttributes()
+    {
+        return $this->_getExtensionAttributes();
+    }
+
+    /**
+     * {@inheritdoc}
+     *
+     * @param \Magento\Catalog\Api\Data\ProductTierPriceExtensionInterface $extensionAttributes
+     * @return $this
+     */
+    public function setExtensionAttributes(
+        \Magento\Catalog\Api\Data\ProductTierPriceExtensionInterface $extensionAttributes
+    ) {
+        return $this->_setExtensionAttributes($extensionAttributes);
+    }
 }

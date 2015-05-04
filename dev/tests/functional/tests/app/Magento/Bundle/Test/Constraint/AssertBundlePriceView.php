@@ -16,10 +16,6 @@ use Magento\Mtf\Constraint\AbstractConstraint;
  */
 class AssertBundlePriceView extends AbstractConstraint
 {
-    /* tags */
-    const SEVERITY = 'low';
-    /* end tags */
-
     /**
      * Assert that displayed price view for bundle product on product page equals passed from fixture.
      *
@@ -54,9 +50,9 @@ class AssertBundlePriceView extends AbstractConstraint
         $priceBlock = $catalogProductView->getViewBlock()->getPriceBlock();
 
         if ($product->hasData('special_price') || $product->hasData('group_price')) {
-            $priceLow = $priceBlock->getFinalPrice();
+            $priceLow = $priceBlock->getPrice();
         } else {
-            $priceLow = ($priceView == 'Price Range') ? $priceBlock->getPriceFrom() : $priceBlock->getRegularPrice();
+            $priceLow = ($priceView == 'Price Range') ? $priceBlock->getPriceFrom() : $priceBlock->getPrice();
         }
 
         \PHPUnit_Framework_Assert::assertEquals(

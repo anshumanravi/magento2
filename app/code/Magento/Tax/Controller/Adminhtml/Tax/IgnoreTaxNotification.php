@@ -6,6 +6,8 @@
  */
 namespace Magento\Tax\Controller\Adminhtml\Tax;
 
+use Magento\Framework\Controller\ResultFactory;
+
 class IgnoreTaxNotification extends \Magento\Tax\Controller\Adminhtml\Tax
 {
     /**
@@ -32,7 +34,7 @@ class IgnoreTaxNotification extends \Magento\Tax\Controller\Adminhtml\Tax
     /**
      * Set tax ignore notification flag and redirect back
      *
-     * @return \Magento\Framework\App\ResponseInterface
+     * @return \Magento\Backend\Model\View\Result\Redirect
      */
     public function execute()
     {
@@ -40,7 +42,7 @@ class IgnoreTaxNotification extends \Magento\Tax\Controller\Adminhtml\Tax
         if ($section) {
             try {
                 $path = 'tax/notification/ignore_' . $section;
-                $this->_objectManager->get('Magento\Core\Model\Resource\Config')
+                $this->_objectManager->get('Magento\Config\Model\Resource\Config')
                     ->saveConfig($path, 1, \Magento\Framework\App\ScopeInterface::SCOPE_DEFAULT, 0);
             } catch (\Exception $e) {
                 $this->messageManager->addError($e->getMessage());
@@ -51,6 +53,8 @@ class IgnoreTaxNotification extends \Magento\Tax\Controller\Adminhtml\Tax
         $this->_cacheTypeList->cleanType('block_html');
         $this->_eventManager->dispatch('adminhtml_cache_refresh_type', ['type' => 'block_html']);
 
-        $this->getResponse()->setRedirect($this->_redirect->getRefererUrl());
+        /** @var \Magento\Backend\Model\View\Result\Redirect $resultRedirect */
+        $resultRedirect = $this->resultFactory->create(ResultFactory::TYPE_REDIRECT);
+        return $resultRedirect->setRefererUrl();
     }
 }

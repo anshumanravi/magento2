@@ -45,12 +45,7 @@ class SavePayment extends \Magento\Checkout\Controller\Onepage
             if ($redirectUrl) {
                 $result['redirect'] = $redirectUrl;
             }
-        } catch (\Magento\Payment\Exception $e) {
-            if ($e->getFields()) {
-                $result['fields'] = $e->getFields();
-            }
-            $result['error'] = $e->getMessage();
-        } catch (\Magento\Framework\Model\Exception $e) {
+        } catch (\Magento\Framework\Exception\LocalizedException $e) {
             $result['error'] = $e->getMessage();
         } catch (\Exception $e) {
             $this->_objectManager->get('Psr\Log\LoggerInterface')->critical($e);

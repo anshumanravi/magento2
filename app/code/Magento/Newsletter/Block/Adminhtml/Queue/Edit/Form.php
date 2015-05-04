@@ -78,10 +78,10 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
         );
 
         $dateFormat = $this->_localeDate->getDateFormat(
-            \Magento\Framework\Stdlib\DateTime\TimezoneInterface::FORMAT_TYPE_MEDIUM
+            \IntlDateFormatter::MEDIUM
         );
         $timeFormat = $this->_localeDate->getTimeFormat(
-            \Magento\Framework\Stdlib\DateTime\TimezoneInterface::FORMAT_TYPE_MEDIUM
+            \IntlDateFormatter::MEDIUM
         );
 
         if ($queue->getQueueStatus() == \Magento\Newsletter\Model\Queue::STATUS_NEVER) {
@@ -92,8 +92,7 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
                     'name' => 'start_at',
                     'date_format' => $dateFormat,
                     'time_format' => $timeFormat,
-                    'label' => __('Queue Date Start'),
-                    'image' => $this->getViewFileUrl('images/grid-cal.png')
+                    'label' => __('Queue Date Start')
                 ]
             );
 
@@ -104,7 +103,6 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
                     [
                         'name' => 'stores[]',
                         'label' => __('Subscribers From'),
-                        'image' => $this->getViewFileUrl('images/grid-cal.png'),
                         'values' => $this->_systemStore->getStoreValuesForForm(),
                         'value' => $queue->getStores()
                     ]
@@ -126,8 +124,7 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
                     'style' => 'width:38%;',
                     'date_format' => $dateFormat,
                     'time_format' => $timeFormat,
-                    'label' => __('Queue Date Start'),
-                    'image' => $this->getViewFileUrl('images/grid-cal.png')
+                    'label' => __('Queue Date Start')
                 ]
             );
 
@@ -138,7 +135,6 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
                     [
                         'name' => 'stores[]',
                         'label' => __('Subscribers From'),
-                        'image' => $this->getViewFileUrl('images/grid-cal.png'),
                         'required' => true,
                         'values' => $this->_systemStore->getStoreValuesForForm(),
                         'value' => $queue->getStores()
@@ -157,7 +153,7 @@ class Form extends \Magento\Backend\Block\Widget\Form\Generic
             $form->getElement(
                 'date'
             )->setValue(
-                $this->_localeDate->date($queue->getQueueStartAt(), \Magento\Framework\Stdlib\DateTime::DATETIME_INTERNAL_FORMAT)
+                $this->_localeDate->date(new \DateTime($queue->getQueueStartAt()))
             );
         }
 

@@ -9,6 +9,7 @@ namespace Magento\Framework\View\Asset\Minified;
 use Magento\Framework\App\Filesystem\DirectoryList;
 use Magento\Framework\View\Asset\MergeableInterface;
 use Magento\Framework\View\Asset\LocalInterface;
+use \Magento\Framework\Phrase;
 
 /**
  * Minified page asset
@@ -206,10 +207,7 @@ abstract class AbstractAsset implements MergeableInterface
      */
     public function getContent()
     {
-        if (null === $this->path) {
-            $this->process();
-        }
-        return $this->staticViewDir->readFile($this->path);
+        return $this->staticViewDir->readFile($this->getPath());
     }
 
     /**
@@ -228,9 +226,8 @@ abstract class AbstractAsset implements MergeableInterface
                 $this->fillPropertiesByMinifyingAsset();
             } catch (\Exception $e) {
                 $this->logger->critical(
-                    new \Magento\Framework\Exception(
-                        'Could not minify file: ' . $this->originalAsset->getSourceFile(),
-                        0,
+                    new \Magento\Framework\Exception\LocalizedException(
+                        new Phrase('Could not minify file: %1', [$this->originalAsset->getSourceFile()]),
                         $e
                     )
                 );
@@ -285,6 +282,11 @@ abstract class AbstractAsset implements MergeableInterface
         $this->filePath = $this->originalAsset->getFilePath();
         $this->context = $this->originalAsset->getContext();
         $this->url = $this->originalAsset->getUrl();
+
+        $isExists = $this->staticViewDir->isExist($this->originalAsset->getPath());
+        if (!$isExists) {
+            $this->staticViewDir->writeFile($this->originalAsset->getPath(), $this->originalAsset->getContent());
+        }
     }
 
     /**

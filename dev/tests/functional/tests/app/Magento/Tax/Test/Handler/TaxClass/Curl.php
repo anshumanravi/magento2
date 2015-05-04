@@ -8,19 +8,17 @@ namespace Magento\Tax\Test\Handler\TaxClass;
 
 use Magento\Mtf\Fixture\FixtureInterface;
 use Magento\Mtf\Handler\Curl as AbstractCurl;
-use Magento\Mtf\Config;
 use Magento\Mtf\Util\Protocol\CurlInterface;
 use Magento\Mtf\Util\Protocol\CurlTransport;
 use Magento\Mtf\Util\Protocol\CurlTransport\BackendDecorator;
 
 /**
- * Class Curl
- * Curl handler for creating customer and product tax class
+ * Curl handler for creating customer and product tax class.
  */
 class Curl extends AbstractCurl implements TaxClassInterface
 {
     /**
-     * Post request for creating tax class
+     * Post request for creating tax class.
      *
      * @param FixtureInterface $fixture [optional]
      * @return mixed|string
@@ -29,7 +27,7 @@ class Curl extends AbstractCurl implements TaxClassInterface
     {
         $data = $fixture->getData();
 
-        $url = $_ENV['app_backend_url'] . 'tax/tax/ajaxSAve/?isAjax=true';
+        $url = $_ENV['app_backend_url'] . 'tax/tax/ajaxSave/?isAjax=true';
         $curl = new BackendDecorator(new CurlTransport(), $this->_configuration);
         $curl->write(CurlInterface::POST, $url, '1.0', [], $data);
         $response = $curl->read();
@@ -40,7 +38,7 @@ class Curl extends AbstractCurl implements TaxClassInterface
     }
 
     /**
-     * Return saved class id if saved
+     * Return saved class id if saved.
      *
      * @param $response
      * @return int|null

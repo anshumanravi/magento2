@@ -7,10 +7,12 @@ namespace Magento\Sales\Block\Adminhtml\Order\View;
 
 use Magento\Eav\Model\AttributeDataFactory;
 use Magento\Framework\Exception\NoSuchEntityException;
+use Magento\Sales\Model\Order\Address;
 
 /**
  * Order history block
  * Class Info
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
 class Info extends \Magento\Sales\Block\Adminhtml\Order\AbstractOrder
 {
@@ -36,6 +38,11 @@ class Info extends \Magento\Sales\Block\Adminhtml\Order\AbstractOrder
     protected $_metadataElementFactory;
 
     /**
+     * @var Address\Renderer
+     */
+    protected $addressRenderer;
+
+    /**
      * Constructor
      *
      * @param \Magento\Backend\Block\Template\Context $context
@@ -44,6 +51,7 @@ class Info extends \Magento\Sales\Block\Adminhtml\Order\AbstractOrder
      * @param \Magento\Customer\Api\GroupRepositoryInterface $groupRepository
      * @param \Magento\Customer\Api\CustomerMetadataInterface $metadata
      * @param \Magento\Customer\Model\Metadata\ElementFactory $elementFactory
+     * @param \Magento\Sales\Model\Order\Address\Renderer $addressRenderer
      * @param array $data
      */
     public function __construct(
@@ -53,24 +61,28 @@ class Info extends \Magento\Sales\Block\Adminhtml\Order\AbstractOrder
         \Magento\Customer\Api\GroupRepositoryInterface $groupRepository,
         \Magento\Customer\Api\CustomerMetadataInterface $metadata,
         \Magento\Customer\Model\Metadata\ElementFactory $elementFactory,
+        \Magento\Sales\Model\Order\Address\Renderer $addressRenderer,
         array $data = []
     ) {
         $this->groupRepository = $groupRepository;
         $this->metadata = $metadata;
         $this->_metadataElementFactory = $elementFactory;
+        $this->addressRenderer = $addressRenderer;
         parent::__construct($context, $registry, $adminHelper, $data);
     }
 
     /**
      * Retrieve required options from parent
      *
-     * @throws \Magento\Framework\Model\Exception
+     * @throws \Magento\Framework\Exception\LocalizedException
      * @return void
      */
     protected function _beforeToHtml()
     {
         if (!$this->getParentBlock()) {
-            throw new \Magento\Framework\Model\Exception(__('Please correct the parent block for this block.'));
+            throw new \Magento\Framework\Exception\LocalizedException(
+                __('Please correct the parent block for this block.')
+            );
         }
         $this->setOrder($this->getParentBlock()->getOrder());
 
@@ -90,7 +102,7 @@ class Info extends \Magento\Sales\Block\Adminhtml\Order\AbstractOrder
     {
         if ($this->getOrder()) {
             $storeId = $this->getOrder()->getStoreId();
-            if (is_null($storeId)) {
+            if ($storeId === null) {
                 $deleted = __(' [deleted]');
                 return nl2br($this->getOrder()->getStoreName()) . $deleted;
             }
@@ -112,7 +124,7 @@ class Info extends \Magento\Sales\Block\Adminhtml\Order\AbstractOrder
         if ($this->getOrder()) {
             $customerGroupId = $this->getOrder()->getCustomerGroupId();
             try {
-                if (!is_null($customerGroupId)) {
+                if ($customerGroupId !== null) {
                     return $this->groupRepository->getById($customerGroupId)->getCode();
                 }
             } catch (NoSuchEntityException $e) {
@@ -241,5 +253,39 @@ class Info extends \Magento\Sales\Block\Adminhtml\Order\AbstractOrder
     public function isSingleStoreMode()
     {
         return $this->_storeManager->isSingleStoreMode();
+    }
+
+    /**
+     * Get object created at date affected with object store timezone
+     *
+     * @param mixed $store
+     * @param string $createdAt
+     * @return \DateTime
+     */
+    public function getCreatedAtStoreDate($store, $createdAt)
+    {
+        return $this->_localeDate->scopeDate($store, $createdAt, true);
+    }
+
+    /**
+     * Get object created at date
+     *
+     * @param string $createdAt
+     * @return \DateTime
+     */
+    public function getOrderAdminDate($createdAt)
+    {
+        return $this->_localeDate->date(new \DateTime($createdAt));
+    }
+
+    /**
+     * Returns string with formatted address
+     *
+     * @param Address $address
+     * @return null|string
+     */
+    public function getFormattedAddress(Address $address)
+    {
+        return $this->addressRenderer->format($address, 'html');
     }
 }

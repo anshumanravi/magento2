@@ -39,8 +39,9 @@ class Collection extends AbstractCollection implements OrderSearchResultInterfac
      * @param \Psr\Log\LoggerInterface $logger
      * @param \Magento\Framework\Data\Collection\Db\FetchStrategyInterface $fetchStrategy
      * @param \Magento\Framework\Event\ManagerInterface $eventManager
+     * @param \Magento\Sales\Model\Resource\EntitySnapshot $entitySnapshot
      * @param \Magento\Framework\DB\Helper $coreResourceHelper
-     * @param \Zend_Db_Adapter_Abstract $connection
+     * @param string|null $connection
      * @param \Magento\Framework\Model\Resource\Db\AbstractDb $resource
      */
     public function __construct(
@@ -48,11 +49,20 @@ class Collection extends AbstractCollection implements OrderSearchResultInterfac
         \Psr\Log\LoggerInterface $logger,
         \Magento\Framework\Data\Collection\Db\FetchStrategyInterface $fetchStrategy,
         \Magento\Framework\Event\ManagerInterface $eventManager,
+        \Magento\Sales\Model\Resource\EntitySnapshot $entitySnapshot,
         \Magento\Framework\DB\Helper $coreResourceHelper,
         $connection = null,
         \Magento\Framework\Model\Resource\Db\AbstractDb $resource = null
     ) {
-        parent::__construct($entityFactory, $logger, $fetchStrategy, $eventManager, $connection, $resource);
+        parent::__construct(
+            $entityFactory,
+            $logger,
+            $fetchStrategy,
+            $eventManager,
+            $entitySnapshot,
+            $connection,
+            $resource
+        );
         $this->_coreResourceHelper = $coreResourceHelper;
     }
 
@@ -83,7 +93,7 @@ class Collection extends AbstractCollection implements OrderSearchResultInterfac
      */
     public function addItemCountExpr()
     {
-        if (is_null($this->_fieldsToSelect)) {
+        if ($this->_fieldsToSelect === null) {
             // If we select all fields from table, we need to add column alias
             $this->getSelect()->columns(['items_count' => 'total_item_count']);
         } else {

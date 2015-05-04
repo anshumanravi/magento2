@@ -57,11 +57,12 @@ class Weee extends \Magento\Sales\Model\Order\Invoice\Total\AbstractTotal
             $orderItem = $item->getOrderItem();
             $orderItemQty = $orderItem->getQtyOrdered();
 
-            if (!$orderItemQty || $orderItem->isDummy() || $item->getQty() <= 0) {
+            if (!$orderItemQty || $orderItem->isDummy() || $item->getQty() < 0) {
                 continue;
             }
 
             $ratio = $item->getQty() / $orderItemQty;
+
             $orderItemWeeeAmount = $orderItem->getWeeeTaxAppliedRowAmount();
             $orderItemBaseWeeeAmount = $orderItem->getBaseWeeeTaxAppliedRowAmnt();
             $weeeAmount = $invoice->roundPrice($orderItemWeeeAmount * $ratio);
@@ -104,7 +105,7 @@ class Weee extends \Magento\Sales\Model\Order\Invoice\Total\AbstractTotal
             $newApplied = [];
             $applied = $this->_weeeData->getApplied($orderItem);
             foreach ($applied as $one) {
-                $title = $one['title'];
+                $title = (string)$one['title'];
                 $one['base_row_amount'] = $invoice->roundPrice($one['base_row_amount'] * $ratio, $title.'_base');
                 $one['row_amount'] = $invoice->roundPrice($one['row_amount'] * $ratio, $title);
                 $one['base_row_amount_incl_tax'] = $invoice->roundPrice(

@@ -5,25 +5,47 @@
  */
 namespace Magento\Tools\Di\Code\Reader;
 
-use Magento\Framework\Filesystem\FilesystemException;
+use Magento\Framework\Exception\FileSystemException;
 use Zend\Code\Scanner\FileScanner;
 
-class ClassesScanner
+class ClassesScanner implements ClassesScannerInterface
 {
+    /**
+     * @var array
+     */
+    protected $excludePatterns = [];
+
+    /**
+     * @param array $excludePatterns
+     */
+    public function __construct(array $excludePatterns = [])
+    {
+        $this->excludePatterns = $excludePatterns;
+    }
+
+    /**
+     * Adds exclude patterns
+     *
+     * @param array $excludePatterns
+     * @return void
+     */
+    public function addExcludePatterns(array $excludePatterns)
+    {
+        $this->excludePatterns = array_merge($this->excludePatterns, $excludePatterns);
+    }
+
     /**
      * Retrieves list of classes for given path
      *
      * @param string $path
-     *
      * @return array
-     *
-     * @throws FilesystemException
+     * @throws FileSystemException
      */
     public function getList($path)
     {
         $realPath = realpath($path);
         if (!(bool)$realPath) {
-            throw new FilesystemException();
+            throw new FileSystemException(new \Magento\Framework\Phrase('Invalid path: %1', $path));
         }
 
         $recursiveIterator = new \RecursiveIteratorIterator(
@@ -36,6 +58,11 @@ class ClassesScanner
             /** @var $fileItem \SplFileInfo */
             if ($fileItem->getExtension() !== 'php') {
                 continue;
+            }
+            foreach ($this->excludePatterns as $excludePattern) {
+                if (preg_match($excludePattern, $fileItem->getRealPath())) {
+                    continue 2;
+                }
             }
             $fileScanner = new FileScanner($fileItem->getRealPath());
             $classNames = $fileScanner->getClassNames();

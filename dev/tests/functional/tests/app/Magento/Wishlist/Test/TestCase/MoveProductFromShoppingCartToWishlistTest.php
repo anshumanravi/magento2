@@ -12,8 +12,6 @@ use Magento\Customer\Test\Fixture\Customer;
 use Magento\Mtf\Fixture\FixtureInterface;
 
 /**
- * Test Flow:
- *
  * Preconditions:
  * 1. Test products are created.
  *
@@ -31,6 +29,7 @@ class MoveProductFromShoppingCartToWishlistTest extends AbstractWishlistTest
     /* tags */
     const MVP = 'no';
     const DOMAIN = 'CS';
+    const STABLE = 'no';
     /* end tags */
 
     /**
@@ -68,6 +67,7 @@ class MoveProductFromShoppingCartToWishlistTest extends AbstractWishlistTest
         // Steps:
         $this->addToCart($product);
         $assertAddedProductToCartSuccessMessage->processAssert($checkoutCart, $product);
+        $checkoutCart->open();
         $checkoutCart->getCartBlock()->getCartItem($product)->moveToWishlist();
 
         return ['product' => $product];

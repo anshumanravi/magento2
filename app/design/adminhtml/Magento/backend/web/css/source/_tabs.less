@@ -33,7 +33,7 @@
     .ui-state-active {
         background: @color-white;
         border-bottom: 0;
-        font-weight: @font-weight-semibold;
+        font-weight: @font-weight__semibold;
         letter-spacing: normal;
         margin-bottom: -.1rem;
         .ui-tabs-anchor {
@@ -44,16 +44,19 @@
     }
 
     .ui-tabs-anchor {
-        color: @color-dark-brownie;
+        color: @color-brown-darkie;
         display: block;
         padding: 1.5rem 1.8rem 1.3rem;
         text-decoration: none;
+        &:hover { // ToDo UI: should be deleted with old styles
+            color: @color-brown-darkie;
+            text-decoration: none;
+        }
     }
 }
 
 //  Tabs content
 .ui-tabs-panel {
-    border-top: .1rem solid @color-gray68;
-    margin-top: -.1rem;
+    margin-top: -1px;
     padding: 2rem;
 }

@@ -33,11 +33,11 @@ class Collection extends \Magento\Catalog\Model\Resource\Product\Collection
     protected $_productEntityTableName;
 
     /**
-     * Product entity type identifier
+     * Product entity attribute set identifier
      *
      * @var int
      */
-    protected $_productEntityTypeId;
+    protected $_productEntityAttributeSetId;
 
     /**
      * Select count
@@ -55,6 +55,11 @@ class Collection extends \Magento\Catalog\Model\Resource\Product\Collection
      * @var \Magento\Catalog\Model\Product\Type
      */
     protected $_productType;
+
+    /**
+     * @var \Magento\Quote\Model\Resource\Quote\Collection
+     */
+    protected $quoteResource;
 
     /**
      * @param \Magento\Framework\Data\Collection\EntityFactory $entityFactory
@@ -79,6 +84,7 @@ class Collection extends \Magento\Catalog\Model\Resource\Product\Collection
      * @param \Magento\Catalog\Model\Resource\Product $product
      * @param \Magento\Reports\Model\Event\TypeFactory $eventTypeFactory
      * @param \Magento\Catalog\Model\Product\Type $productType
+     * @param \Magento\Quote\Model\Resource\Quote\Collection $quoteResource
      * @param mixed $connection
      *
      * @SuppressWarnings(PHPMD.ExcessiveParameterList)
@@ -106,11 +112,12 @@ class Collection extends \Magento\Catalog\Model\Resource\Product\Collection
         \Magento\Catalog\Model\Resource\Product $product,
         \Magento\Reports\Model\Event\TypeFactory $eventTypeFactory,
         \Magento\Catalog\Model\Product\Type $productType,
+        \Magento\Quote\Model\Resource\Quote\Collection $quoteResource,
         $connection = null
     ) {
         $this->setProductEntityId($product->getEntityIdField());
         $this->setProductEntityTableName($product->getEntityTable());
-        $this->setProductEntityTypeId($product->getTypeId());
+        $this->setProductAttributeSetId($product->getEntityType()->getDefaultAttributeSetId());
         parent::__construct(
             $entityFactory,
             $logger,
@@ -135,11 +142,13 @@ class Collection extends \Magento\Catalog\Model\Resource\Product\Collection
         );
         $this->_eventTypeFactory = $eventTypeFactory;
         $this->_productType = $productType;
+        $this->quoteResource = $quoteResource;
     }
 
     /**
      * Set Type for COUNT SQL Select
      *
+     * @codeCoverageIgnoreStart
      * @param int $type
      * @return $this
      */
@@ -194,26 +203,27 @@ class Collection extends \Magento\Catalog\Model\Resource\Product\Collection
     }
 
     /**
-     * Set product entity type id
+     * Get product attribute set  id
+     *
+     * @return int
+     */
+    public function getProductAttributeSetId()
+    {
+        return $this->_productEntityAttributeSetId;
+    }
+
+    /**
+     * Set product attribute set id
      *
      * @param int $value
      * @return $this
      */
-    public function setProductEntityTypeId($value)
+    public function setProductAttributeSetId($value)
     {
-        $this->_productEntityTypeId = $value;
+        $this->_productEntityAttributeSetId = $value;
         return $this;
     }
-
-    /**
-     * Get product entity type id
-     *
-     * @return int
-     */
-    public function getProductEntityTypeId()
-    {
-        return $this->_productEntityTypeId;
-    }
+    //@codeCoverageIgnoreEnd
 
     /**
      * Join fields
@@ -232,12 +242,12 @@ class Collection extends \Magento\Catalog\Model\Resource\Product\Collection
     /**
      * Get select count sql
      *
-     * @return string
+     * @return \Zend_Db_Select
      */
     public function getSelectCountSql()
     {
         if ($this->_selectCountSqlType == self::SELECT_COUNT_SQL_TYPE_CART) {
-            $countSelect = clone $this->getSelect();
+            $countSelect = clone $this->quoteResource->getSelect();
             $countSelect->reset()->from(
                 ['quote_item_table' => $this->getTable('quote_item')],
                 ['COUNT(DISTINCT quote_item_table.product_id)']
@@ -262,136 +272,6 @@ class Collection extends \Magento\Catalog\Model\Resource\Product\Collection
     }
 
     /**
-     * Add carts count
-     *
-     * @return $this
-     */
-    public function addCartsCount()
-    {
-        $countSelect = clone $this->getSelect();
-        $countSelect->reset();
-
-        $countSelect->from(
-            ['quote_items' => $this->getTable('quote_item')],
-            'COUNT(*)'
-        )->join(
-            ['quotes' => $this->getTable('quote')],
-            'quotes.entity_id = quote_items.quote_id AND quotes.is_active = 1',
-            []
-        )->where(
-            "quote_items.product_id = e.entity_id"
-        );
-
-        $this->getSelect()->columns(
-            ["carts" => "({$countSelect})"]
-        )->group(
-            "e.{$this->getProductEntityId()}"
-        )->having(
-            'carts > ?',
-            0
-        );
-
-        return $this;
-    }
-
-    /**
-     * Add orders count
-     *
-     * @param string $from
-     * @param string $to
-     * @return $this
-     */
-    public function addOrdersCount($from = '', $to = '')
-    {
-        $orderItemTableName = $this->getTable('sales_order_item');
-        $productFieldName = sprintf('e.%s', $this->getProductEntityId());
-
-        $this->getSelect()->joinLeft(
-            ['order_items' => $orderItemTableName],
-            "order_items.product_id = {$productFieldName}",
-            []
-        )->columns(
-            ['orders' => 'COUNT(order_items2.item_id)']
-        )->group(
-            $productFieldName
-        );
-
-        $dateFilter = ['order_items2.item_id = order_items.item_id'];
-        if ($from != '' && $to != '') {
-            $dateFilter[] = $this->_prepareBetweenSql('order_items2.created_at', $from, $to);
-        }
-
-        $this->getSelect()->joinLeft(
-            ['order_items2' => $orderItemTableName],
-            implode(' AND ', $dateFilter),
-            []
-        );
-
-        return $this;
-    }
-
-    /**
-     * Add ordered qty's
-     *
-     * @param string $from
-     * @param string $to
-     * @return $this
-     */
-    public function addOrderedQty($from = '', $to = '')
-    {
-        $adapter = $this->getConnection();
-        $compositeTypeIds = $this->_productType->getCompositeTypes();
-        $orderTableAliasName = $adapter->quoteIdentifier('order');
-
-        $orderJoinCondition = [
-            $orderTableAliasName . '.entity_id = order_items.order_id',
-            $adapter->quoteInto("{$orderTableAliasName}.state <> ?", \Magento\Sales\Model\Order::STATE_CANCELED),
-        ];
-
-        $productJoinCondition = [
-            $adapter->quoteInto('(e.type_id NOT IN (?))', $compositeTypeIds),
-            'e.entity_id = order_items.product_id',
-            $adapter->quoteInto('e.entity_type_id = ?', $this->getProductEntityTypeId()),
-        ];
-
-        if ($from != '' && $to != '') {
-            $fieldName = $orderTableAliasName . '.created_at';
-            $orderJoinCondition[] = $this->_prepareBetweenSql($fieldName, $from, $to);
-        }
-
-        $this->getSelect()->reset()->from(
-            ['order_items' => $this->getTable('sales_order_item')],
-            ['ordered_qty' => 'SUM(order_items.qty_ordered)', 'order_items_name' => 'order_items.name']
-        )->joinInner(
-            ['order' => $this->getTable('sales_order')],
-            implode(' AND ', $orderJoinCondition),
-            []
-        )->joinLeft(
-            ['e' => $this->getProductEntityTableName()],
-            implode(' AND ', $productJoinCondition),
-            [
-                'entity_id' => 'order_items.product_id',
-                'entity_type_id' => 'e.entity_type_id',
-                'attribute_set_id' => 'e.attribute_set_id',
-                'type_id' => 'e.type_id',
-                'sku' => 'e.sku',
-                'has_options' => 'e.has_options',
-                'required_options' => 'e.required_options',
-                'created_at' => 'e.created_at',
-                'updated_at' => 'e.updated_at'
-            ]
-        )->where(
-            'parent_item_id IS NULL'
-        )->group(
-            'order_items.product_id'
-        )->having(
-            'SUM(order_items.qty_ordered) > ?',
-            0
-        );
-        return $this;
-    }
-
-    /**
      * Set order
      *
      * @param string $attribute
@@ -400,7 +280,7 @@ class Collection extends \Magento\Catalog\Model\Resource\Product\Collection
      */
     public function setOrder($attribute, $dir = self::SORT_ORDER_DESC)
     {
-        if (in_array($attribute, ['carts', 'orders', 'ordered_qty'])) {
+        if (in_array($attribute, ['carts'])) {
             $this->getSelect()->order($attribute . ' ' . $dir);
         } else {
             parent::setOrder($attribute, $dir);
@@ -435,8 +315,8 @@ class Collection extends \Magento\Catalog\Model\Resource\Product\Collection
         )->join(
             ['e' => $this->getProductEntityTableName()],
             $this->getConnection()->quoteInto(
-                "e.entity_id = report_table_views.object_id AND e.entity_type_id = ?",
-                $this->getProductEntityTypeId()
+                'e.entity_id = report_table_views.object_id AND e.attribute_set_id = ?',
+                $this->getProductAttributeSetId()
             )
         )->where(
             'report_table_views.event_type_id = ?',

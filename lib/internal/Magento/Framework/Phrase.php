@@ -9,6 +9,7 @@ namespace Magento\Framework;
 
 use Zend\Stdlib\JsonSerializable;
 use Magento\Framework\Phrase\RendererInterface;
+use Magento\Framework\Phrase\Renderer\Placeholder as RendererPlaceholder;
 
 class Phrase implements JsonSerializable
 {
@@ -17,21 +18,21 @@ class Phrase implements JsonSerializable
      *
      * @var RendererInterface
      */
-    private static $_renderer;
+    private static $renderer;
 
     /**
      * String for rendering
      *
      * @var string
      */
-    private $_text;
+    private $text;
 
     /**
      * Arguments for placeholder values
      *
      * @var array
      */
-    private $_arguments;
+    private $arguments;
 
     /**
      * Set default Phrase renderer
@@ -41,7 +42,7 @@ class Phrase implements JsonSerializable
      */
     public static function setRenderer(RendererInterface $renderer)
     {
-        self::$_renderer = $renderer;
+        self::$renderer = $renderer;
     }
 
     /**
@@ -51,7 +52,10 @@ class Phrase implements JsonSerializable
      */
     public static function getRenderer()
     {
-        return self::$_renderer;
+        if (!self::$renderer) {
+            self::$renderer = new RendererPlaceholder();
+        }
+        return self::$renderer;
     }
 
     /**
@@ -62,8 +66,28 @@ class Phrase implements JsonSerializable
      */
     public function __construct($text, array $arguments = [])
     {
-        $this->_text = (string)$text;
-        $this->_arguments = $arguments;
+        $this->text = (string)$text;
+        $this->arguments = $arguments;
+    }
+
+    /**
+     * Get phrase base text
+     *
+     * @return string
+     */
+    public function getText()
+    {
+        return $this->text;
+    }
+
+    /**
+     * Get phrase message arguments
+     *
+     * @return array
+     */
+    public function getArguments()
+    {
+        return $this->arguments;
     }
 
     /**
@@ -73,7 +97,11 @@ class Phrase implements JsonSerializable
      */
     public function render()
     {
-        return self::$_renderer ? self::$_renderer->render([$this->_text], $this->_arguments) : $this->_text;
+        try {
+            return self::getRenderer()->render([$this->text], $this->getArguments());
+        } catch (\Exception $e) {
+            return $this->getText();
+        }
     }
 
     /**

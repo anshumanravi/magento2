@@ -5,8 +5,8 @@
  * See COPYING.txt for license details.
  */
 -->
-<repository xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../../../../vendor/magento/mtf/Magento/Mtf/Repository/etc/repository.xsd">
-    <storage class="Magento\Downloadable\Test\Repository\DownloadableProduct">
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../../../../vendor/magento/mtf/Magento/Mtf/Repository/etc/repository.xsd">
+    <repository class="Magento\Downloadable\Test\Repository\DownloadableProduct">
         <dataset name="default">
             <field name="name" xsi:type="string">Test downloadable product %isolation%</field>
             <field name="sku" xsi:type="string">sku_test_downloadable_product_%isolation%</field>
@@ -110,7 +110,7 @@
             </field>
             <field name="status" xsi:type="string">Product online</field>
             <field name="category_ids" xsi:type="array">
-                <item name="preset" xsi:type="string">default</item>
+                <item name="presets" xsi:type="string">default_subcategory</item>
             </field>
             <field name="visibility" xsi:type="string">Catalog, Search</field>
             <field name="is_virtual" xsi:type="string">Yes</field>
@@ -144,7 +144,7 @@
             </field>
             <field name="status" xsi:type="string">Product online</field>
             <field name="category_ids" xsi:type="array">
-                <item name="preset" xsi:type="string">default</item>
+                <item name="presets" xsi:type="string">default_subcategory</item>
             </field>
             <field name="visibility" xsi:type="string">Catalog, Search</field>
             <field name="is_virtual" xsi:type="string">Yes</field>
@@ -175,7 +175,7 @@
             </field>
             <field name="status" xsi:type="string">Product online</field>
             <field name="category_ids" xsi:type="array">
-                <item name="preset" xsi:type="string">default</item>
+                <item name="presets" xsi:type="string">default_subcategory</item>
             </field>
             <field name="visibility" xsi:type="string">Catalog, Search</field>
             <field name="is_virtual" xsi:type="string">Yes</field>
@@ -202,7 +202,7 @@
                 <item name="value" xsi:type="string">1</item>
             </field>
             <field name="category_ids" xsi:type="array">
-                <item name="preset" xsi:type="string">default</item>
+                <item name="presets" xsi:type="string">default_subcategory</item>
             </field>
             <field name="downloadable_links" xsi:type="array">
                 <item name="preset" xsi:type="string">one_no_separately_link</item>
@@ -221,5 +221,5 @@
                 <item name="preset" xsi:type="string">one_dollar_product_with_no_separated_link</item>
             </field>
         </dataset>
-    </storage>
-</repository>
+    </repository>
+</config>

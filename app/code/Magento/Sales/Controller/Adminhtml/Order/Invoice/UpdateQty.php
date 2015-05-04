@@ -6,9 +6,9 @@
  */
 namespace Magento\Sales\Controller\Adminhtml\Order\Invoice;
 
-use Magento\Framework\Model\Exception;
+use Magento\Framework\Exception\LocalizedException;
 use Magento\Backend\App\Action;
-use Magento\Framework\Controller\Result\JSONFactory;
+use Magento\Framework\Controller\Result\JsonFactory;
 use Magento\Framework\View\Result\PageFactory;
 use Magento\Framework\Controller\Result\RawFactory;
 use Magento\Backend\App\Action\Context;
@@ -17,7 +17,7 @@ use Magento\Framework\Registry;
 class UpdateQty extends \Magento\Sales\Controller\Adminhtml\Invoice\AbstractInvoice\View
 {
     /**
-     * @var JSONFactory
+     * @var JsonFactory
      */
     protected $resultJsonFactory;
 
@@ -36,7 +36,7 @@ class UpdateQty extends \Magento\Sales\Controller\Adminhtml\Invoice\AbstractInvo
      * @param Registry $registry
      * @param \Magento\Backend\Model\View\Result\ForwardFactory $resultForwardFactory
      * @param PageFactory $resultPageFactory
-     * @param JSONFactory $resultJsonFactory
+     * @param JsonFactory $resultJsonFactory
      * @param RawFactory $resultRawFactory
      */
     public function __construct(
@@ -44,7 +44,7 @@ class UpdateQty extends \Magento\Sales\Controller\Adminhtml\Invoice\AbstractInvo
         Registry $registry,
         \Magento\Backend\Model\View\Result\ForwardFactory $resultForwardFactory,
         PageFactory $resultPageFactory,
-        JSONFactory $resultJsonFactory,
+        JsonFactory $resultJsonFactory,
         RawFactory $resultRawFactory
     ) {
         $this->resultPageFactory = $resultPageFactory;
@@ -67,11 +67,13 @@ class UpdateQty extends \Magento\Sales\Controller\Adminhtml\Invoice\AbstractInvo
             /** @var \Magento\Sales\Model\Order $order */
             $order = $this->_objectManager->create('Magento\Sales\Model\Order')->load($orderId);
             if (!$order->getId()) {
-                throw new \Magento\Framework\Exception(__('The order no longer exists.'));
+                throw new \Magento\Framework\Exception\LocalizedException(__('The order no longer exists.'));
             }
 
             if (!$order->canInvoice()) {
-                throw new \Magento\Framework\Exception(__('The order does not allow an invoice to be created.'));
+                throw new \Magento\Framework\Exception\LocalizedException(
+                    __('The order does not allow an invoice to be created.')
+                );
             }
 
             /** @var \Magento\Sales\Model\Order\Invoice $invoice */
@@ -79,7 +81,9 @@ class UpdateQty extends \Magento\Sales\Controller\Adminhtml\Invoice\AbstractInvo
                 ->prepareInvoice($invoiceItems);
 
             if (!$invoice->getTotalQty()) {
-                throw new \Magento\Framework\Exception(__('Cannot create an invoice without products.'));
+                throw new \Magento\Framework\Exception\LocalizedException(
+                    __('Cannot create an invoice without products.')
+                );
             }
             $this->registry->register('current_invoice', $invoice);
             // Save invoice comment text in current invoice object in order to display it in corresponding view
@@ -90,13 +94,13 @@ class UpdateQty extends \Magento\Sales\Controller\Adminhtml\Invoice\AbstractInvo
             $resultPage = $this->resultPageFactory->create();
             $resultPage->getConfig()->getTitle()->prepend(__('Invoices'));
             $response = $resultPage->getLayout()->getBlock('order_items')->toHtml();
-        } catch (Exception $e) {
+        } catch (LocalizedException $e) {
             $response = ['error' => true, 'message' => $e->getMessage()];
         } catch (\Exception $e) {
             $response = ['error' => true, 'message' => __('Cannot update item quantity.')];
         }
         if (is_array($response)) {
-            /** @var \Magento\Framework\Controller\Result\JSON $resultJson */
+            /** @var \Magento\Framework\Controller\Result\Json $resultJson */
             $resultJson = $this->resultJsonFactory->create();
             $resultJson->setData($response);
             return $resultJson;

@@ -50,7 +50,7 @@ class Select extends \Magento\Backend\Block\Widget\Grid\Column\Filter\AbstractFi
      */
     protected function _renderOption($option, $value)
     {
-        $selected = $option['value'] == $value && !is_null($value) ? ' selected="selected"' : '';
+        $selected = $option['value'] == $value && $value !== null ? ' selected="selected"' : '';
         return '<option value="' . $this->escapeHtml(
             $option['value']
         ) . '"' . $selected . '>' . $this->escapeHtml(
@@ -66,7 +66,7 @@ class Select extends \Magento\Backend\Block\Widget\Grid\Column\Filter\AbstractFi
         $html = '<select name="' . $this->_getHtmlName() . '" id="' . $this->_getHtmlId() . '"' . $this->getUiId(
             'filter',
             $this->_getHtmlName()
-        ) . 'class="no-changes">';
+        ) . 'class="admin__control-select no-changes">';
         $value = $this->getValue();
         foreach ($this->_getOptions() as $option) {
             if (is_array($option['value'])) {
@@ -88,7 +88,7 @@ class Select extends \Magento\Backend\Block\Widget\Grid\Column\Filter\AbstractFi
      */
     public function getCondition()
     {
-        if (is_null($this->getValue())) {
+        if ($this->getValue() === null) {
             return null;
         }
         return ['eq' => $this->getValue()];

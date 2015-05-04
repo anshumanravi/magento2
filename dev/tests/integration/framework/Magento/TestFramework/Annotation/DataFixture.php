@@ -27,12 +27,14 @@ class DataFixture
      * Constructor
      *
      * @param string $fixtureBaseDir
-     * @throws \Magento\Framework\Exception
+     * @throws \Magento\Framework\Exception\LocalizedException
      */
     public function __construct($fixtureBaseDir)
     {
         if (!is_dir($fixtureBaseDir)) {
-            throw new \Magento\Framework\Exception("Fixture base directory '{$fixtureBaseDir}' does not exist.");
+            throw new \Magento\Framework\Exception\LocalizedException(
+                new \Magento\Framework\Phrase("Fixture base directory '%1' does not exist.", [$fixtureBaseDir])
+            );
         }
         $this->_fixtureBaseDir = realpath($fixtureBaseDir);
     }
@@ -101,7 +103,7 @@ class DataFixture
      * @param \PHPUnit_Framework_TestCase $test
      * @param string $scope
      * @return array
-     * @throws \Magento\Framework\Exception
+     * @throws \Magento\Framework\Exception\LocalizedException
      */
     protected function _getFixtures(\PHPUnit_Framework_TestCase $test, $scope = null)
     {
@@ -115,8 +117,8 @@ class DataFixture
             foreach ($annotations['magentoDataFixture'] as $fixture) {
                 if (strpos($fixture, '\\') !== false) {
                     // usage of a single directory separator symbol streamlines search across the source code
-                    throw new \Magento\Framework\Exception(
-                        'Directory separator "\\" is prohibited in fixture declaration.'
+                    throw new \Magento\Framework\Exception\LocalizedException(
+                        new \Magento\Framework\Phrase('Directory separator "\\" is prohibited in fixture declaration.')
                     );
                 }
                 $fixtureMethod = [get_class($test), $fixture];
@@ -158,6 +160,7 @@ class DataFixture
      * Execute single fixture script
      *
      * @param string|array $fixture
+     * @throws \Exception
      */
     protected function _applyOneFixture($fixture)
     {
@@ -168,7 +171,9 @@ class DataFixture
                 require $fixture;
             }
         } catch (\Exception $e) {
-            echo 'Error in fixture: ', json_encode($fixture), PHP_EOL, $e;
+            throw new \Exception(
+                sprintf("Error in fixture: %s.\n %s", json_encode($fixture), $e->getMessage())
+            );
         }
     }
 
@@ -176,22 +181,18 @@ class DataFixture
      * Execute fixture scripts if any
      *
      * @param array $fixtures
-     * @throws \Magento\Framework\Exception
+     * @throws \Magento\Framework\Exception\LocalizedException
      */
     protected function _applyFixtures(array $fixtures)
     {
-        try {
-            /* Execute fixture scripts */
-            foreach ($fixtures as $oneFixture) {
-                /* Skip already applied fixtures */
-                if (in_array($oneFixture, $this->_appliedFixtures, true)) {
-                    continue;
-                }
-                $this->_applyOneFixture($oneFixture);
-                $this->_appliedFixtures[] = $oneFixture;
+        /* Execute fixture scripts */
+        foreach ($fixtures as $oneFixture) {
+            /* Skip already applied fixtures */
+            if (in_array($oneFixture, $this->_appliedFixtures, true)) {
+                continue;
             }
-        } catch (\PDOException $e) {
-            echo $e;
+            $this->_applyOneFixture($oneFixture);
+            $this->_appliedFixtures[] = $oneFixture;
         }
     }
 

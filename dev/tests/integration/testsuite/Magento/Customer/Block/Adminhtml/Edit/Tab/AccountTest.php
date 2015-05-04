@@ -116,7 +116,7 @@ class AccountTest extends \PHPUnit_Framework_TestCase
         $result = $this->accountBlock->initForm()->toHtml();
 
         // Verify confirmation controls are present
-        $this->assertContains('<div class="field field-confirmation "', $result);
+        $this->assertContains('<div class="admin__field field field-confirmation "', $result);
         $this->assertContains('<select id="_accountconfirmation"', $result);
     }
 
@@ -159,7 +159,7 @@ class AccountTest extends \PHPUnit_Framework_TestCase
         $element = $this->accountBlock->getForm()->getElement('firstname');
 
         // Make sure readonly has not been set (is null) or set to false
-        $this->assertTrue(is_null($element->getReadonly()) || !$element->getReadonly());
+        $this->assertTrue($element->getReadonly() === null || !$element->getReadonly());
     }
 
     /**

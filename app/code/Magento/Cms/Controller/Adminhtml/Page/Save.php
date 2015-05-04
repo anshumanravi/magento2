@@ -7,15 +7,9 @@
 namespace Magento\Cms\Controller\Adminhtml\Page;
 
 use Magento\Backend\App\Action;
-use Magento\Backend\Model\View\Result\RedirectFactory;
 
 class Save extends \Magento\Backend\App\Action
 {
-    /**
-     * @var RedirectFactory
-     */
-    protected $resultRedirectFactory;
-
     /**
      * @var PostDataProcessor
      */
@@ -24,15 +18,10 @@ class Save extends \Magento\Backend\App\Action
     /**
      * @param Action\Context $context
      * @param PostDataProcessor $dataProcessor
-     * @param RedirectFactory $resultRedirectFactory
      */
-    public function __construct(
-        Action\Context $context,
-        PostDataProcessor $dataProcessor,
-        RedirectFactory $resultRedirectFactory
-    ) {
+    public function __construct(Action\Context $context, PostDataProcessor $dataProcessor)
+    {
         $this->dataProcessor = $dataProcessor;
-        $this->resultRedirectFactory = $resultRedirectFactory;
         parent::__construct($context);
     }
 
@@ -82,7 +71,7 @@ class Save extends \Magento\Backend\App\Action
                     return $resultRedirect->setPath('*/*/edit', ['page_id' => $model->getId(), '_current' => true]);
                 }
                 return $resultRedirect->setPath('*/*/');
-            } catch (\Magento\Framework\Model\Exception $e) {
+            } catch (\Magento\Framework\Exception\LocalizedException $e) {
                 $this->messageManager->addError($e->getMessage());
             } catch (\RuntimeException $e) {
                 $this->messageManager->addError($e->getMessage());

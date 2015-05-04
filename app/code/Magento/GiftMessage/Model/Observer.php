@@ -39,12 +39,24 @@ class Observer extends \Magento\Framework\Object
     /**
      * Set gift messages to order from quote address
      *
-     * @param \Magento\Framework\Object $observer
+     * @param \Magento\Framework\Event\Observer $observer
      * @return $this
      */
-    public function salesEventConvertQuoteToOrder($observer)
+    public function salesEventQuoteSubmitBefore($observer)
     {
         $observer->getEvent()->getOrder()->setGiftMessageId($observer->getEvent()->getQuote()->getGiftMessageId());
+        return $this;
+    }
+
+    /**
+     * Set gift message to order from address in multiple addresses checkout.
+     *
+     * @param \Magento\Framework\Event\Observer $observer
+     * @return $this
+     */
+    public function multishippingEventCreateOrders($observer)
+    {
+        $observer->getEvent()->getOrder()->setGiftMessageId($observer->getEvent()->getAddress()->getGiftMessageId());
         return $this;
     }
 
@@ -62,7 +74,7 @@ class Observer extends \Magento\Framework\Object
             return $this;
         }
 
-        if (!$this->_giftMessageMessage->isMessagesAvailable('order', $order, $order->getStore())) {
+        if (!$this->_giftMessageMessage->isMessagesAllowed('order', $order, $order->getStore())) {
             return $this;
         }
         $giftMessageId = $order->getGiftMessageId();
@@ -90,7 +102,7 @@ class Observer extends \Magento\Framework\Object
             return $this;
         }
 
-        $isAvailable = $this->_giftMessageMessage->isMessagesAvailable(
+        $isAvailable = $this->_giftMessageMessage->isMessagesAllowed(
             'order_item',
             $orderItem,
             $orderItem->getStoreId()

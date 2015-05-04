@@ -5,12 +5,10 @@
  */
 namespace Magento\Customer\Api\Data;
 
-use Magento\Framework\Api\ExtensibleDataInterface;
-
 /**
  * Customer interface.
  */
-interface CustomerInterface extends ExtensibleDataInterface
+interface CustomerInterface extends \Magento\Framework\Api\CustomAttributesDataInterface
 {
     /**#@+
      * Constants defined for keys of the data array. Identical to the name of the getter in snake case
@@ -39,6 +37,7 @@ interface CustomerInterface extends ExtensibleDataInterface
     /**
      * Get customer id
      *
+     * @api
      * @return int|null
      */
     public function getId();
@@ -46,6 +45,7 @@ interface CustomerInterface extends ExtensibleDataInterface
     /**
      * Set customer id
      *
+     * @api
      * @param int $id
      * @return $this
      */
@@ -54,6 +54,7 @@ interface CustomerInterface extends ExtensibleDataInterface
     /**
      * Get group id
      *
+     * @api
      * @return int|null
      */
     public function getGroupId();
@@ -61,6 +62,7 @@ interface CustomerInterface extends ExtensibleDataInterface
     /**
      * Set group id
      *
+     * @api
      * @param int $groupId
      * @return $this
      */
@@ -69,6 +71,7 @@ interface CustomerInterface extends ExtensibleDataInterface
     /**
      * Get default billing address id
      *
+     * @api
      * @return string|null
      */
     public function getDefaultBilling();
@@ -76,6 +79,7 @@ interface CustomerInterface extends ExtensibleDataInterface
     /**
      * Set default billing address id
      *
+     * @api
      * @param string $defaultBilling
      * @return $this
      */
@@ -84,6 +88,7 @@ interface CustomerInterface extends ExtensibleDataInterface
     /**
      * Get default shipping address id
      *
+     * @api
      * @return string|null
      */
     public function getDefaultShipping();
@@ -91,6 +96,7 @@ interface CustomerInterface extends ExtensibleDataInterface
     /**
      * Set default shipping address id
      *
+     * @api
      * @param string $defaultShipping
      * @return $this
      */
@@ -99,6 +105,7 @@ interface CustomerInterface extends ExtensibleDataInterface
     /**
      * Get confirmation
      *
+     * @api
      * @return string|null
      */
     public function getConfirmation();
@@ -106,6 +113,7 @@ interface CustomerInterface extends ExtensibleDataInterface
     /**
      * Set confirmation
      *
+     * @api
      * @param string $confirmation
      * @return $this
      */
@@ -114,6 +122,7 @@ interface CustomerInterface extends ExtensibleDataInterface
     /**
      * Get created at time
      *
+     * @api
      * @return string|null
      */
     public function getCreatedAt();
@@ -121,6 +130,7 @@ interface CustomerInterface extends ExtensibleDataInterface
     /**
      * Set created at time
      *
+     * @api
      * @param string $createdAt
      * @return $this
      */
@@ -129,6 +139,7 @@ interface CustomerInterface extends ExtensibleDataInterface
     /**
      * Get created in area
      *
+     * @api
      * @return string|null
      */
     public function getCreatedIn();
@@ -136,6 +147,7 @@ interface CustomerInterface extends ExtensibleDataInterface
     /**
      * Set created in area
      *
+     * @api
      * @param string $createdIn
      * @return $this
      */
@@ -144,6 +156,7 @@ interface CustomerInterface extends ExtensibleDataInterface
     /**
      * Get date of birth
      *
+     * @api
      * @return string|null
      */
     public function getDob();
@@ -151,6 +164,7 @@ interface CustomerInterface extends ExtensibleDataInterface
     /**
      * Set date of birth
      *
+     * @api
      * @param string $dob
      * @return $this
      */
@@ -159,6 +173,7 @@ interface CustomerInterface extends ExtensibleDataInterface
     /**
      * Get email address
      *
+     * @api
      * @return string
      */
     public function getEmail();
@@ -166,6 +181,7 @@ interface CustomerInterface extends ExtensibleDataInterface
     /**
      * Set email address
      *
+     * @api
      * @param string $email
      * @return $this
      */
@@ -174,6 +190,7 @@ interface CustomerInterface extends ExtensibleDataInterface
     /**
      * Get first name
      *
+     * @api
      * @return string
      */
     public function getFirstname();
@@ -181,6 +198,7 @@ interface CustomerInterface extends ExtensibleDataInterface
     /**
      * Set first name
      *
+     * @api
      * @param string $firstname
      * @return $this
      */
@@ -189,6 +207,7 @@ interface CustomerInterface extends ExtensibleDataInterface
     /**
      * Get last name
      *
+     * @api
      * @return string
      */
     public function getLastname();
@@ -196,6 +215,7 @@ interface CustomerInterface extends ExtensibleDataInterface
     /**
      * Set last name
      *
+     * @api
      * @param string $lastname
      * @return string
      */
@@ -204,6 +224,7 @@ interface CustomerInterface extends ExtensibleDataInterface
     /**
      * Get middle name
      *
+     * @api
      * @return string|null
      */
     public function getMiddlename();
@@ -211,6 +232,7 @@ interface CustomerInterface extends ExtensibleDataInterface
     /**
      * Set middle name
      *
+     * @api
      * @param string $middlename
      * @return $this
      */
@@ -219,6 +241,7 @@ interface CustomerInterface extends ExtensibleDataInterface
     /**
      * Get prefix
      *
+     * @api
      * @return string|null
      */
     public function getPrefix();
@@ -226,6 +249,7 @@ interface CustomerInterface extends ExtensibleDataInterface
     /**
      * Set prefix
      *
+     * @api
      * @param string $prefix
      * @return $this
      */
@@ -234,6 +258,7 @@ interface CustomerInterface extends ExtensibleDataInterface
     /**
      * Get suffix
      *
+     * @api
      * @return string|null
      */
     public function getSuffix();
@@ -241,6 +266,7 @@ interface CustomerInterface extends ExtensibleDataInterface
     /**
      * Set suffix
      *
+     * @api
      * @param string $suffix
      * @return $this
      */
@@ -249,6 +275,7 @@ interface CustomerInterface extends ExtensibleDataInterface
     /**
      * Get gender
      *
+     * @api
      * @return string|null
      */
     public function getGender();
@@ -256,6 +283,7 @@ interface CustomerInterface extends ExtensibleDataInterface
     /**
      * Set gender
      *
+     * @api
      * @param string $gender
      * @return $this
      */
@@ -264,6 +292,7 @@ interface CustomerInterface extends ExtensibleDataInterface
     /**
      * Get store id
      *
+     * @api
      * @return int|null
      */
     public function getStoreId();
@@ -271,6 +300,7 @@ interface CustomerInterface extends ExtensibleDataInterface
     /**
      * Set store id
      *
+     * @api
      * @param int $storeId
      * @return $this
      */
@@ -279,6 +309,7 @@ interface CustomerInterface extends ExtensibleDataInterface
     /**
      * Get tax Vat
      *
+     * @api
      * @return string|null
      */
     public function getTaxvat();
@@ -286,6 +317,7 @@ interface CustomerInterface extends ExtensibleDataInterface
     /**
      * Set tax Vat
      *
+     * @api
      * @param string $taxvat
      * @return $this
      */
@@ -294,6 +326,7 @@ interface CustomerInterface extends ExtensibleDataInterface
     /**
      * Get website id
      *
+     * @api
      * @return int|null
      */
     public function getWebsiteId();
@@ -301,6 +334,7 @@ interface CustomerInterface extends ExtensibleDataInterface
     /**
      * Set website id
      *
+     * @api
      * @param int $websiteId
      * @return $this
      */
@@ -309,6 +343,7 @@ interface CustomerInterface extends ExtensibleDataInterface
     /**
      * Get customer addresses.
      *
+     * @api
      * @return \Magento\Customer\Api\Data\AddressInterface[]|null
      */
     public function getAddresses();
@@ -316,8 +351,26 @@ interface CustomerInterface extends ExtensibleDataInterface
     /**
      * Set customer addresses.
      *
+     * @api
      * @param \Magento\Customer\Api\Data\AddressInterface[] $addresses
      * @return $this
      */
     public function setAddresses(array $addresses = null);
+
+    /**
+     * Retrieve existing extension attributes object or create a new one.
+     *
+     * @api
+     * @return \Magento\Customer\Api\Data\CustomerExtensionInterface|null
+     */
+    public function getExtensionAttributes();
+
+    /**
+     * Set an extension attributes object.
+     *
+     * @api
+     * @param \Magento\Customer\Api\Data\CustomerExtensionInterface $extensionAttributes
+     * @return $this
+     */
+    public function setExtensionAttributes(\Magento\Customer\Api\Data\CustomerExtensionInterface $extensionAttributes);
 }

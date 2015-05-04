@@ -122,7 +122,7 @@ class Cache
      * @param string $idx
      * @param array|string $tags
      * @return string
-     * @throws \Magento\Framework\Exception
+     * @throws \Magento\Framework\Exception\LocalizedException
      * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      * @SuppressWarnings(PHPMD.NPathComplexity)
      */
@@ -134,27 +134,26 @@ class Cache
         }
 
         $hash = spl_object_hash($object);
-        if (!is_null($idx) && strpos($idx, '{')) {
+        if ($idx !== null && strpos($idx, '{')) {
             $idx = str_replace('{hash}', $hash, $idx);
         }
         if (isset($this->_hashes[$hash])) {
             //throw new \Exception('test');
-            if (!is_null($idx)) {
+            if ($idx !== null) {
                 $this->_references[$idx] = $this->_hashes[$hash];
             }
             return $this->_hashes[$hash];
         }
 
-        if (is_null($idx)) {
+        if ($idx === null) {
             $idx = '#' . ++$this->_idx;
         }
 
         if (isset($this->_objects[$idx])) {
-            throw new \Magento\Framework\Exception(
-                'Object already exists in registry (' . $idx . '). Old object class: ' . get_class(
-                    $this->_objects[$idx]
-                ) . ', new object class: ' . get_class(
-                    $object
+            throw new \Magento\Framework\Exception\LocalizedException(
+                new \Magento\Framework\Phrase(
+                    'Object already exists in registry (%1). Old object class: %2, new object class: %3',
+                    [$idx, get_class($this->_objects[$idx]), get_class($object)]
                 )
             );
         }
@@ -184,7 +183,7 @@ class Cache
      * @param string|array $refName
      * @param string $idx
      * @return bool|void
-     * @throws \Magento\Framework\Exception
+     * @throws \Magento\Framework\Exception\LocalizedException
      */
     public function reference($refName, $idx)
     {
@@ -196,13 +195,11 @@ class Cache
         }
 
         if (isset($this->_references[$refName])) {
-            throw new \Magento\Framework\Exception(
-                'The reference already exists: ' .
-                $refName .
-                '. New index: ' .
-                $idx .
-                ', old index: ' .
-                $this->_references[$refName]
+            throw new \Magento\Framework\Exception\LocalizedException(
+                new \Magento\Framework\Phrase(
+                    'The reference already exists: %1. New index: %2, old index: %3',
+                    [$refName, $idx, $this->_references[$refName]]
+                )
             );
         }
         $this->_references[$refName] = $idx;

@@ -30,7 +30,6 @@ class Add extends \Magento\Checkout\Controller\Cart
      * @param \Magento\Store\Model\StoreManagerInterface $storeManager
      * @param \Magento\Framework\Data\Form\FormKey\Validator $formKeyValidator
      * @param CustomerCart $cart
-     * @param \Magento\Framework\Controller\Result\RedirectFactory $resultRedirectFactory
      * @param ProductRepositoryInterface $productRepository
      */
     public function __construct(
@@ -40,7 +39,6 @@ class Add extends \Magento\Checkout\Controller\Cart
         \Magento\Store\Model\StoreManagerInterface $storeManager,
         \Magento\Framework\Data\Form\FormKey\Validator $formKeyValidator,
         CustomerCart $cart,
-        \Magento\Framework\Controller\Result\RedirectFactory $resultRedirectFactory,
         ProductRepositoryInterface $productRepository
     ) {
         parent::__construct(
@@ -49,8 +47,7 @@ class Add extends \Magento\Checkout\Controller\Cart
             $checkoutSession,
             $storeManager,
             $formKeyValidator,
-            $cart,
-            $resultRedirectFactory
+            $cart
         );
         $this->productRepository = $productRepository;
     }
@@ -86,7 +83,7 @@ class Add extends \Magento\Checkout\Controller\Cart
         try {
             if (isset($params['qty'])) {
                 $filter = new \Zend_Filter_LocalizedToNormalized(
-                    ['locale' => $this->_objectManager->get('Magento\Framework\Locale\ResolverInterface')->getLocaleCode()]
+                    ['locale' => $this->_objectManager->get('Magento\Framework\Locale\ResolverInterface')->getLocale()]
                 );
                 $params['qty'] = $filter->filter($params['qty']);
             }
@@ -108,8 +105,6 @@ class Add extends \Magento\Checkout\Controller\Cart
 
             $this->cart->save();
 
-            $this->_checkoutSession->setCartWasUpdated(true);
-
             /**
              * @todo remove wishlist observer processAddToCart
              */
@@ -128,7 +123,7 @@ class Add extends \Magento\Checkout\Controller\Cart
                 }
                 return $this->goBack(null, $product);
             }
-        } catch (\Magento\Framework\Model\Exception $e) {
+        } catch (\Magento\Framework\Exception\LocalizedException $e) {
             if ($this->_checkoutSession->getUseNotice(true)) {
                 $this->messageManager->addNotice(
                     $this->_objectManager->get('Magento\Framework\Escaper')->escapeHtml($e->getMessage())
@@ -193,7 +188,7 @@ class Add extends \Magento\Checkout\Controller\Cart
         }
 
         $this->getResponse()->representJson(
-            $this->_objectManager->get('Magento\Core\Helper\Data')->jsonEncode($result)
+            $this->_objectManager->get('Magento\Framework\Json\Helper\Data')->jsonEncode($result)
         );
     }
 }

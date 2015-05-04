@@ -23,7 +23,7 @@ class Addgroup extends \Magento\Checkout\Controller\Cart
             foreach ($itemsCollection as $item) {
                 try {
                     $this->cart->addOrderItem($item, 1);
-                } catch (\Magento\Framework\Model\Exception $e) {
+                } catch (\Magento\Framework\Exception\LocalizedException $e) {
                     if ($this->_checkoutSession->getUseNotice(true)) {
                         $this->messageManager->addNotice($e->getMessage());
                     } else {
@@ -36,7 +36,6 @@ class Addgroup extends \Magento\Checkout\Controller\Cart
                 }
             }
             $this->cart->save();
-            $this->_checkoutSession->setCartWasUpdated(true);
         }
         return $this->_goBack();
     }

@@ -9,11 +9,12 @@
     <update handle="sales_order_create_customer_block"/>
     <head>
         <link src="Magento_Sales::js/bootstrap/order-create-index.js"/>
-        <css src="Magento_Theme::prototype/magento.css"/>
     </head>
     <update handle="sales_order_create_item_price"/>
     <body>
-        <referenceBlock name="page-title">
+        <referenceContainer name="admin.scope.col.wrap" htmlClass="admin__old" /> <!-- ToDo UI: remove this wrapper with old styles removal. The class name "admin__old" is for tests only, we shouldn't use it in any way -->
+
+        <referenceBlock name="page.title">
             <action method="setTitleId">
                 <argument translate="true" name="id" xsi:type="string">order-header</argument>
             </action>

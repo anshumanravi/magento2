@@ -7,6 +7,7 @@
 namespace Magento\Sales\Test\Constraint;
 
 use Magento\Sales\Test\Page\Adminhtml\SalesOrderView;
+use Magento\Sales\Test\Page\Adminhtml\OrderIndex;
 use Magento\Mtf\Constraint\AbstractConstraint;
 
 /**
@@ -14,21 +15,26 @@ use Magento\Mtf\Constraint\AbstractConstraint;
  */
 class AssertOrderGrandTotal extends AbstractConstraint
 {
-    /* tags */
-    const SEVERITY = 'high';
-    /* end tags */
-
     /**
      * Assert that Order Grand Total is correct on order page in backend
      *
      * @param SalesOrderView $salesOrderView
-     * @param string $grandTotal
+     * @param string $orderId
+     * @param OrderIndex $salesOrder
+     * @param array $prices
      * @return void
      */
-    public function processAssert(SalesOrderView $salesOrderView, $grandTotal)
-    {
+    public function processAssert(
+        SalesOrderView $salesOrderView,
+        OrderIndex $salesOrder,
+        $orderId,
+        array $prices
+    ) {
+        $salesOrder->open();
+        $salesOrder->getSalesOrderGrid()->searchAndOpen(['id' => $orderId]);
+
         \PHPUnit_Framework_Assert::assertEquals(
-            $grandTotal,
+            $prices['grandTotal'],
             $salesOrderView->getOrderTotalsBlock()->getGrandTotal(),
             'Grand Total price does not equal to price from data set.'
         );

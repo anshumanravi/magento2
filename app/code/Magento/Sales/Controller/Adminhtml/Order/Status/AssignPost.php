@@ -6,31 +6,8 @@
  */
 namespace Magento\Sales\Controller\Adminhtml\Order\Status;
 
-use Magento\Framework\Registry;
-use Magento\Backend\App\Action\Context;
-use Magento\Backend\Model\View\Result\RedirectFactory;
-
 class AssignPost extends \Magento\Sales\Controller\Adminhtml\Order\Status
 {
-    /**
-     * @var RedirectFactory
-     */
-    protected $resultRedirectFactory;
-
-    /**
-     * @param Context $context
-     * @param Registry $coreRegistry
-     * @param RedirectFactory $resultRedirectFactory
-     */
-    public function __construct(
-        Context $context,
-        Registry $coreRegistry,
-        RedirectFactory $resultRedirectFactory
-    ) {
-        parent::__construct($context, $coreRegistry);
-        $this->resultRedirectFactory = $resultRedirectFactory;
-    }
-
     /**
      * Save status assignment to state
      *
@@ -51,7 +28,7 @@ class AssignPost extends \Magento\Sales\Controller\Adminhtml\Order\Status
                     $status->assignState($state, $isDefault, $visibleOnFront);
                     $this->messageManager->addSuccess(__('You have assigned the order status.'));
                     return $resultRedirect->setPath('sales/*/');
-                } catch (\Magento\Framework\Model\Exception $e) {
+                } catch (\Magento\Framework\Exception\LocalizedException $e) {
                     $this->messageManager->addError($e->getMessage());
                 } catch (\Exception $e) {
                     $this->messageManager->addException(

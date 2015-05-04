@@ -585,7 +585,11 @@ class Onepage
         }
 
         $customer = $this->customerDataFactory->create();
-        $this->dataObjectHelper->populateWithArray($customer, $customerData);
+        $this->dataObjectHelper->populateWithArray(
+            $customer,
+            $customerData,
+            '\Magento\Customer\Api\Data\CustomerInterface'
+        );
 
         if ($quote->getCheckoutMethod() == self::METHOD_REGISTER) {
             // We always have $customerRequest here, otherwise we would have been kicked off the function several
@@ -772,18 +776,18 @@ class Onepage
      * Validate quote state to be integrated with one page checkout process
      *
      * @return void
-     * @throws \Magento\Framework\Model\Exception
+     * @throws \Magento\Framework\Exception\LocalizedException
      */
     protected function validate()
     {
         $quote = $this->getQuote();
 
         if ($quote->isMultipleShippingAddresses()) {
-            throw new \Magento\Framework\Model\Exception(__('There are more than one shipping address.'));
+            throw new \Magento\Framework\Exception\LocalizedException(__('There are more than one shipping address.'));
         }
 
         if ($quote->getCheckoutMethod() == self::METHOD_GUEST && !$this->_helper->isAllowedGuestCheckout($quote)) {
-            throw new \Magento\Framework\Model\Exception(__('Sorry, guest checkout is not enabled.'));
+            throw new \Magento\Framework\Exception\LocalizedException(__('Sorry, guest checkout is not enabled.'));
         }
     }
 
@@ -816,7 +820,11 @@ class Onepage
         $customer = $quote->getCustomer();
         $customerBillingData = $billing->exportCustomerAddress();
         $dataArray = $this->_objectCopyService->getDataFromFieldset('checkout_onepage_quote', 'to_customer', $quote);
-        $this->dataObjectHelper->populateWithArray($customer, $dataArray);
+        $this->dataObjectHelper->populateWithArray(
+            $customer,
+            $dataArray,
+            '\Magento\Customer\Api\Data\CustomerInterface'
+        );
         $quote->setCustomer($customer)->setCustomerId(true);
 
         $customerBillingData->setIsDefaultBilling(true);

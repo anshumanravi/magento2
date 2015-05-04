@@ -16,10 +16,6 @@ use Magento\Mtf\Constraint\AbstractConstraint;
  */
 class AssertShipmentInShipmentsGrid extends AbstractConstraint
 {
-    /* tags */
-    const SEVERITY = 'low';
-    /* end tags */
-
     /**
      * Assert shipment with corresponding shipment/order ID is present in 'Shipments' with correct total qty field
      *
@@ -36,12 +32,15 @@ class AssertShipmentInShipmentsGrid extends AbstractConstraint
         foreach ($ids['shipmentIds'] as $key => $shipmentIds) {
             $filter = [
                 'id' => $shipmentIds,
-                'order_id' => $orderId,
+                'order_id' => $orderId
+            ];
+            $filterQty = [
                 'total_qty_from' => $totalQty[$key],
                 'total_qty_to' => $totalQty[$key],
             ];
+            $shipmentIndex->getShipmentsGrid()->search($filter + $filterQty);
             \PHPUnit_Framework_Assert::assertTrue(
-                $shipmentIndex->getShipmentsGrid()->isRowVisible($filter),
+                $shipmentIndex->getShipmentsGrid()->isRowVisible($filter, false),
                 'Shipment is absent in shipment grid on shipment index page.'
             );
         }

@@ -17,10 +17,6 @@ use Magento\Mtf\Constraint\AbstractConstraint;
  */
 class AssertCategoryForAssignedProducts extends AbstractConstraint
 {
-    /* tags */
-    const SEVERITY = 'low';
-    /* end tags */
-
     /**
      * Assert that displayed assigned products on category page equals passed from fixture
      *
@@ -43,7 +39,7 @@ class AssertCategoryForAssignedProducts extends AbstractConstraint
         $browser->open($_ENV['app_frontend_url'] . $categoryUrlKey . '.html');
         foreach ($products as $productFixture) {
             \PHPUnit_Framework_Assert::assertTrue(
-                $categoryView->getListProductBlock()->isProductVisible($productFixture->getName()),
+                $categoryView->getListProductBlock()->getProductItem($productFixture)->isVisible(),
                 "Products '{$productFixture->getName()}' not find."
             );
         }

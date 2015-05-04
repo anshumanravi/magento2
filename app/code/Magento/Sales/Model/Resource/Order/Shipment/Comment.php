@@ -5,7 +5,8 @@
  */
 namespace Magento\Sales\Model\Resource\Order\Shipment;
 
-use Magento\Sales\Model\Resource\Entity;
+use Magento\Sales\Model\Resource\EntityAbstract;
+use Magento\Sales\Model\Resource\EntitySnapshot;
 use Magento\Sales\Model\Spi\ShipmentCommentResourceInterface;
 
 /**
@@ -13,7 +14,7 @@ use Magento\Sales\Model\Spi\ShipmentCommentResourceInterface;
  *
  * @author      Magento Core Team <core@magentocommerce.com>
  */
-class Comment extends Entity implements ShipmentCommentResourceInterface
+class Comment extends EntityAbstract implements ShipmentCommentResourceInterface
 {
     /**
      * Event prefix
@@ -30,21 +31,23 @@ class Comment extends Entity implements ShipmentCommentResourceInterface
     protected $validator;
 
     /**
-     * @param \Magento\Framework\App\Resource $resource
+     * @param \Magento\Framework\Model\Resource\Db\Context $context
      * @param \Magento\Sales\Model\Resource\Attribute $attribute
-     * @param \Magento\Sales\Model\Increment $salesIncrement
+     * @param \Magento\SalesSequence\Model\Manager $sequenceManager
+     * @param EntitySnapshot $entitySnapshot
      * @param \Magento\Sales\Model\Order\Shipment\Comment\Validator $validator
-     * @param \Magento\Sales\Model\Resource\GridInterface $gridAggregator
+     * @param string|null $resourcePrefix
      */
     public function __construct(
-        \Magento\Framework\App\Resource $resource,
+        \Magento\Framework\Model\Resource\Db\Context $context,
         \Magento\Sales\Model\Resource\Attribute $attribute,
-        \Magento\Sales\Model\Increment $salesIncrement,
+        \Magento\SalesSequence\Model\Manager $sequenceManager,
+        EntitySnapshot $entitySnapshot,
         \Magento\Sales\Model\Order\Shipment\Comment\Validator $validator,
-        \Magento\Sales\Model\Resource\GridInterface $gridAggregator = null
+        $resourcePrefix = null
     ) {
         $this->validator = $validator;
-        parent::__construct($resource, $attribute, $salesIncrement, $gridAggregator);
+        parent::__construct($context, $attribute, $sequenceManager, $entitySnapshot, $resourcePrefix);
     }
 
     /**
@@ -62,7 +65,7 @@ class Comment extends Entity implements ShipmentCommentResourceInterface
      *
      * @param \Magento\Framework\Model\AbstractModel $object
      * @return $this
-     * @throws \Magento\Framework\Model\Exception
+     * @throws \Magento\Framework\Exception\LocalizedException
      */
     protected function _beforeSave(\Magento\Framework\Model\AbstractModel $object)
     {
@@ -74,8 +77,8 @@ class Comment extends Entity implements ShipmentCommentResourceInterface
         parent::_beforeSave($object);
         $errors = $this->validator->validate($object);
         if (!empty($errors)) {
-            throw new \Magento\Framework\Model\Exception(
-                __("Cannot save comment") . ":\n" . implode("\n", $errors)
+            throw new \Magento\Framework\Exception\LocalizedException(
+                __("Cannot save comment:\n%1", implode("\n", $errors))
             );
         }
 

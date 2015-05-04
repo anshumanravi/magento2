@@ -7,7 +7,6 @@
 namespace Magento\Catalog\Controller\Product;
 
 use Magento\Framework\App\Action\Context;
-use Magento\Framework\Controller\Result;
 use Magento\Framework\View\Result\PageFactory;
 
 class View extends \Magento\Catalog\Controller\Product
@@ -16,11 +15,6 @@ class View extends \Magento\Catalog\Controller\Product
      * @var \Magento\Catalog\Helper\Product\View
      */
     protected $viewHelper;
-
-    /**
-     * @var \Magento\Framework\Controller\Result\RedirectFactory
-     */
-    protected $resultRedirectFactory;
 
     /**
      * @var \Magento\Framework\Controller\Result\ForwardFactory
@@ -37,19 +31,16 @@ class View extends \Magento\Catalog\Controller\Product
      *
      * @param Context $context
      * @param \Magento\Catalog\Helper\Product\View $viewHelper
-     * @param \Magento\Framework\Controller\Result\RedirectFactory $resultRedirectFactory
      * @param \Magento\Framework\Controller\Result\ForwardFactory $resultForwardFactory
      * @param PageFactory $resultPageFactory
      */
     public function __construct(
         Context $context,
         \Magento\Catalog\Helper\Product\View $viewHelper,
-        \Magento\Framework\Controller\Result\RedirectFactory $resultRedirectFactory,
         \Magento\Framework\Controller\Result\ForwardFactory $resultForwardFactory,
         PageFactory $resultPageFactory
     ) {
         $this->viewHelper = $viewHelper;
-        $this->resultRedirectFactory = $resultRedirectFactory;
         $this->resultForwardFactory = $resultForwardFactory;
         $this->resultPageFactory = $resultPageFactory;
         parent::__construct($context);
@@ -96,7 +87,7 @@ class View extends \Magento\Catalog\Controller\Product
             }
             if ($this->getRequest()->isAjax()) {
                 $this->getResponse()->representJson(
-                    $this->_objectManager->get('Magento\Core\Helper\Data')->jsonEncode([
+                    $this->_objectManager->get('Magento\Framework\Json\Helper\Data')->jsonEncode([
                         'backUrl' => $this->_redirect->getRedirectUrl()
                     ])
                 );
@@ -117,15 +108,13 @@ class View extends \Magento\Catalog\Controller\Product
             $page = $this->resultPageFactory->create(false, ['isIsolated' => true]);
             $this->viewHelper->prepareAndRender($page, $productId, $this, $params);
             return $page;
+        } catch (\Magento\Framework\Exception\NoSuchEntityException $e) {
+            return $this->noProductRedirect();
         } catch (\Exception $e) {
-            if ($e->getCode() == $this->viewHelper->ERR_NO_PRODUCT_LOADED) {
-                return $this->noProductRedirect();
-            } else {
-                $this->_objectManager->get('Psr\Log\LoggerInterface')->critical($e);
-                $resultForward = $this->resultForwardFactory->create();
-                $resultForward->forward('noroute');
-                return $resultForward;
-            }
+            $this->_objectManager->get('Psr\Log\LoggerInterface')->critical($e);
+            $resultForward = $this->resultForwardFactory->create();
+            $resultForward->forward('noroute');
+            return $resultForward;
         }
     }
 }

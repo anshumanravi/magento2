@@ -31,7 +31,7 @@
 } ?>
             <tbody>
                 <?php echo $block->getItemHtml($_item) ?>
-                <?php if ($this->helper('Magento\GiftMessage\Helper\Message')->getIsMessagesAvailable('order_item', $_item) && $_item->getGiftMessageId()): ?>
+                <?php if ($this->helper('Magento\GiftMessage\Helper\Message')->isMessagesAllowed('order_item', $_item) && $_item->getGiftMessageId()): ?>
                     <?php $_giftMessage = $this->helper('Magento\GiftMessage\Helper\Message')->getGiftMessageForEntity($_item); ?>
                     <tr>
                         <td class="col options" colspan="5">
@@ -68,11 +68,11 @@
     </table>
 </div>
 <?php if ($_giftMessage): ?>
-    <script>
-require(['jquery', "mage/mage"], function(jQuery){
-
-    jQuery('a.action.show').add('a.action.close').mage('giftMessage', {});
-
-});
+<script type="text/x-magento-init">
+    {
+        "a.action.show, a.action.close": {
+            "giftMessage": {}
+        }
+    }
 </script>
 <?php endif; ?>

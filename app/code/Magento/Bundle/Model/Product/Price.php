@@ -47,7 +47,12 @@ class Price extends \Magento\Catalog\Model\Product\Type\Price
      * @param \Magento\Framework\Event\ManagerInterface $eventManager
      * @param PriceCurrencyInterface $priceCurrency
      * @param GroupManagementInterface $groupManagement
+     * @param \Magento\Catalog\Api\Data\ProductGroupPriceInterfaceFactory $groupPriceFactory
+     * @param \Magento\Catalog\Api\Data\ProductTierPriceInterfaceFactory $tierPriceFactory
+     * @param \Magento\Framework\App\Config\ScopeConfigInterface $config
      * @param \Magento\Catalog\Helper\Data $catalogData
+     *
+     * @SuppressWarnings(PHPMD.ExcessiveParameterList)
      */
     public function __construct(
         \Magento\CatalogRule\Model\Resource\RuleFactory $ruleFactory,
@@ -57,6 +62,9 @@ class Price extends \Magento\Catalog\Model\Product\Type\Price
         \Magento\Framework\Event\ManagerInterface $eventManager,
         PriceCurrencyInterface $priceCurrency,
         GroupManagementInterface $groupManagement,
+        \Magento\Catalog\Api\Data\ProductGroupPriceInterfaceFactory $groupPriceFactory,
+        \Magento\Catalog\Api\Data\ProductTierPriceInterfaceFactory $tierPriceFactory,
+        \Magento\Framework\App\Config\ScopeConfigInterface $config,
         \Magento\Catalog\Helper\Data $catalogData
     ) {
         $this->_catalogData = $catalogData;
@@ -67,7 +75,10 @@ class Price extends \Magento\Catalog\Model\Product\Type\Price
             $customerSession,
             $eventManager,
             $priceCurrency,
-            $groupManagement
+            $groupManagement,
+            $groupPriceFactory,
+            $tierPriceFactory,
+            $config
         );
     }
 
@@ -145,7 +156,7 @@ class Price extends \Magento\Catalog\Model\Product\Type\Price
      */
     public function getFinalPrice($qty, $product)
     {
-        if (is_null($qty) && !is_null($product->getCalculatedFinalPrice())) {
+        if ($qty === null && $product->getCalculatedFinalPrice() !== null) {
             return $product->getCalculatedFinalPrice();
         }
 
@@ -408,7 +419,7 @@ class Price extends \Magento\Catalog\Model\Product\Type\Price
         if (null === $bundleQty) {
             $bundleQty = 1.;
         }
-        if (is_null($selectionQty)) {
+        if ($selectionQty === null) {
             $selectionQty = $selectionProduct->getSelectionQty();
         }
 
@@ -472,7 +483,7 @@ class Price extends \Magento\Catalog\Model\Product\Type\Price
     {
         $groupPrices = $product->getData('group_price');
 
-        if (is_null($groupPrices)) {
+        if ($groupPrices === null) {
             $attribute = $product->getResource()->getAttribute('group_price');
             if ($attribute) {
                 $attribute->getBackend()->afterLoad($product);
@@ -480,7 +491,7 @@ class Price extends \Magento\Catalog\Model\Product\Type\Price
             }
         }
 
-        if (is_null($groupPrices) || !is_array($groupPrices)) {
+        if ($groupPrices === null || !is_array($groupPrices)) {
             return null;
         }
 
@@ -508,7 +519,7 @@ class Price extends \Magento\Catalog\Model\Product\Type\Price
      */
     protected function _applyTierPrice($product, $qty, $finalPrice)
     {
-        if (is_null($qty)) {
+        if ($qty === null) {
             return $finalPrice;
         }
 
@@ -536,15 +547,15 @@ class Price extends \Magento\Catalog\Model\Product\Type\Price
         $allCustomersGroupId = $this->_groupManagement->getAllCustomersGroup()->getId();
         $prices = $product->getData('tier_price');
 
-        if (is_null($prices)) {
+        if ($prices === null) {
             if ($attribute = $product->getResource()->getAttribute('tier_price')) {
                 $attribute->getBackend()->afterLoad($product);
                 $prices = $product->getData('tier_price');
             }
         }
 
-        if (is_null($prices) || !is_array($prices)) {
-            if (!is_null($qty)) {
+        if ($prices === null || !is_array($prices)) {
+            if ($qty !== null) {
                 return $product->getPrice();
             }
             return [
@@ -641,7 +652,7 @@ class Price extends \Magento\Catalog\Model\Product\Type\Price
         $specialPriceTo,
         $store = null
     ) {
-        if (!is_null($specialPrice) && $specialPrice != false) {
+        if ($specialPrice !== null && $specialPrice != false) {
             if ($this->_localeDate->isScopeDateInInterval($store, $specialPriceFrom, $specialPriceTo)) {
                 $specialPrice = $finalPrice * ($specialPrice / 100);
                 $finalPrice = min($finalPrice, $specialPrice);

@@ -23,7 +23,6 @@ class Save extends \Magento\Customer\Controller\Adminhtml\Group
      * @param \Magento\Framework\Registry $coreRegistry
      * @param GroupRepositoryInterface $groupRepository
      * @param GroupInterfaceFactory $groupDataFactory
-     * @param \Magento\Backend\Model\View\Result\RedirectFactory $resultRedirectFactory
      * @param \Magento\Backend\Model\View\Result\ForwardFactory $resultForwardFactory
      * @param \Magento\Framework\View\Result\PageFactory $resultPageFactory
      * @param \Magento\Framework\Reflection\DataObjectProcessor $dataObjectProcessor
@@ -33,7 +32,6 @@ class Save extends \Magento\Customer\Controller\Adminhtml\Group
         \Magento\Framework\Registry $coreRegistry,
         GroupRepositoryInterface $groupRepository,
         GroupInterfaceFactory $groupDataFactory,
-        \Magento\Backend\Model\View\Result\RedirectFactory $resultRedirectFactory,
         \Magento\Backend\Model\View\Result\ForwardFactory $resultForwardFactory,
         \Magento\Framework\View\Result\PageFactory $resultPageFactory,
         \Magento\Framework\Reflection\DataObjectProcessor $dataObjectProcessor
@@ -44,7 +42,6 @@ class Save extends \Magento\Customer\Controller\Adminhtml\Group
             $coreRegistry,
             $groupRepository,
             $groupDataFactory,
-            $resultRedirectFactory,
             $resultForwardFactory,
             $resultPageFactory
         );
@@ -80,7 +77,7 @@ class Save extends \Magento\Customer\Controller\Adminhtml\Group
             $id = $this->getRequest()->getParam('id');
             $resultRedirect = $this->resultRedirectFactory->create();
             try {
-                if (!is_null($id)) {
+                if ($id !== null) {
                     $customerGroup = $this->groupRepository->getById((int)$id);
                 } else {
                     $customerGroup = $this->groupDataFactory->create();

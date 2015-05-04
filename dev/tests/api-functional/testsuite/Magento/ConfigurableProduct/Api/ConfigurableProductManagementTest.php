@@ -6,7 +6,6 @@
  */
 namespace Magento\ConfigurableProduct\Api;
 
-use Magento\Webapi\Model\Rest\Config as RestConfig;
 use Magento\TestFramework\Helper\Bootstrap;
 
 class ConfigurableProductManagementTest extends \Magento\TestFramework\TestCase\WebapiAbstract
@@ -23,7 +22,7 @@ class ConfigurableProductManagementTest extends \Magento\TestFramework\TestCase\
         $serviceInfo = [
             'rest' => [
                 'resourcePath' => self::RESOURCE_PATH,
-                'httpMethod' => RestConfig::HTTP_METHOD_PUT
+                'httpMethod' => \Magento\Framework\Webapi\Rest\Request::HTTP_METHOD_PUT
             ],
             'soap' => [
                 'service' => self::SERVICE_NAME,
@@ -65,12 +64,16 @@ class ConfigurableProductManagementTest extends \Magento\TestFramework\TestCase\
                 'store_id' => 1,
                 'status' => 1,
                 'visibility' => \Magento\Catalog\Model\Product\Visibility::VISIBILITY_NOT_VISIBLE,
+                'options' => [],
+                'product_links' => [],
                 'custom_attributes' => [
                     [
                         'attribute_code' => 'test_configurable',
                         'value' => $attributeOptionValue
                     ]
-                ]
+                ],
+                'group_prices' => [],
+                'tier_prices' => []
             ]
         ];
         ksort($expectedItems);

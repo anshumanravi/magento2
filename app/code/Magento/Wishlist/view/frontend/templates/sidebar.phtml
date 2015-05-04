@@ -40,11 +40,10 @@ $wishlistHelper = $this->helper('Magento\Wishlist\Helper\Data');
                                        class="product-item-link"><?php echo $block->escapeHtml($product->getName()) ?></a>
                                 </strong>
                                 <?php
-                                    echo $block->getProductPriceHtml(
-                                        $product,
+                                    echo $block->getItemPriceHtml(
+                                        $item,
                                         \Magento\Catalog\Pricing\Price\ConfiguredPriceInterface::CONFIGURED_PRICE_CODE,
-                                        \Magento\Framework\Pricing\Render::ZONE_ITEM_LIST,
-                                        ['item' => $item]
+                                        \Magento\Framework\Pricing\Render::ZONE_ITEM_LIST
                                     );
                                 ?>
                                 <div class="product-item-actions">
@@ -55,7 +54,7 @@ $wishlistHelper = $this->helper('Magento\Wishlist\Helper\Data');
                                            class="action tocart primary"><span><?php echo __('Add to Cart') ?></span></a>
                                     <?php else: ?>
                                         <?php
-                                            $postDataHelper = $this->helper('Magento\Core\Helper\PostData');
+                                            $postDataHelper = $this->helper('Magento\Framework\Data\Helper\PostHelper');
                                             $postData = $postDataHelper->getPostData($block->getItemAddToCartUrl($item), ['product' => $product->getEntityId()])
                                         ?>
                                             <button type="button" class="action tocart primary" data-post='<?php echo $postData; ?>'><span><?php echo __('Add to Cart') ?></span></button>

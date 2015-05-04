@@ -15,6 +15,13 @@ use Magento\Mtf\Client\Locator;
 class Page extends Block
 {
     /**
+     * Selector for initial script.
+     *
+     * @var string
+     */
+    protected $initialScript = 'script[type="text/x-magento-init"]';
+
+    /**
      * Cms page content class.
      *
      * @var string
@@ -26,7 +33,7 @@ class Page extends Block
      *
      * @var string
      */
-    protected $cmsPageTitle = ".page-title";
+    protected $cmsPageTitle = ".page-title-wrapper";
 
     /**
      * Cms page text locator.
@@ -106,5 +113,16 @@ class Page extends Block
         } else {
             throw new \Exception('Determine how to find the widget on the page.');
         }
+    }
+
+    /**
+     * Waiting page initialization.
+     *
+     * @return void
+     */
+    public function waitPageInit()
+    {
+        $this->waitForElementNotVisible($this->initialScript);
+        sleep(3); // TODO: remove after resolving an issue with ajax on Frontend.
     }
 }

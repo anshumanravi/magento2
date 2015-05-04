@@ -152,10 +152,7 @@ class Backup extends \Magento\Framework\Object implements \Magento\Framework\Bac
                 'extension' => $this->_helper->getExtensionByType($backupData->getType()),
                 'display_name' => $this->_helper->nameToDisplayName($backupData->getName()),
                 'name' => $backupData->getName(),
-                'date_object' => new \Magento\Framework\Stdlib\DateTime\Date(
-                    (int)$backupData->getTime(),
-                    $this->_localeResolver->getLocaleCode()
-                ),
+                'date_object' => (new \DateTime())->setTimestamp($backupData->getTime()),
             ]
         );
 
@@ -226,12 +223,14 @@ class Backup extends \Magento\Framework\Object implements \Magento\Framework\Bac
      *
      * @param string &$content
      * @return $this
-     * @throws \Magento\Framework\Model\Exception
+     * @throws \Magento\Framework\Exception\LocalizedException
      */
     public function setFile(&$content)
     {
         if (!$this->hasData('time') || !$this->hasData('type') || !$this->hasData('path')) {
-            throw new \Magento\Framework\Model\Exception(__('Please correct the order of creation for a new backup.'));
+            throw new \Magento\Framework\Exception\LocalizedException(
+                __('Please correct the order of creation for a new backup.')
+            );
         }
 
         $this->varDirectory->writeFile($this->_getFilePath(), $content);
@@ -242,12 +241,12 @@ class Backup extends \Magento\Framework\Object implements \Magento\Framework\Bac
      * Return content of backup file
      *
      * @return string
-     * @throws \Magento\Framework\Model\Exception
+     * @throws \Magento\Framework\Exception\LocalizedException
      */
     public function &getFile()
     {
         if (!$this->exists()) {
-            throw new \Magento\Framework\Model\Exception(__("The backup file does not exist."));
+            throw new \Magento\Framework\Exception\LocalizedException(__('The backup file does not exist.'));
         }
 
         return $this->varDirectory->read($this->_getFilePath());
@@ -257,12 +256,12 @@ class Backup extends \Magento\Framework\Object implements \Magento\Framework\Bac
      * Delete backup file
      *
      * @return $this
-     * @throws \Magento\Framework\Model\Exception
+     * @throws \Magento\Framework\Exception\LocalizedException
      */
     public function deleteFile()
     {
         if (!$this->exists()) {
-            throw new \Magento\Framework\Model\Exception(__("The backup file does not exist."));
+            throw new \Magento\Framework\Exception\LocalizedException(__('The backup file does not exist.'));
         }
 
         $this->varDirectory->delete($this->_getFilePath());
@@ -274,20 +273,22 @@ class Backup extends \Magento\Framework\Object implements \Magento\Framework\Bac
      *
      * @param bool $write
      * @return $this
-     * @throws \Magento\Backup\Exception
+     * @throws \Magento\Framework\Exception\InputException
      * @throws \Magento\Framework\Backup\Exception\NotEnoughPermissions
      */
     public function open($write = false)
     {
-        if (is_null($this->getPath())) {
-            throw new \Magento\Backup\Exception(__('The backup file path was not specified.'));
+        if ($this->getPath() === null) {
+            throw new \Magento\Framework\Exception\InputException(__('The backup file path was not specified.'));
         }
 
         if ($write && $this->varDirectory->isFile($this->_getFilePath())) {
             $this->varDirectory->delete($this->_getFilePath());
         }
         if (!$write && !$this->varDirectory->isFile($this->_getFilePath())) {
-            throw new \Magento\Backup\Exception(__('The backup file "%1" does not exist.', $this->getFileName()));
+            throw new \Magento\Framework\Exception\InputException(
+                __('The backup file "%1" does not exist.', $this->getFileName())
+            );
         }
 
         $mode = $write ? 'wb' . self::COMPRESS_RATE : 'rb';
@@ -299,7 +300,7 @@ class Backup extends \Magento\Framework\Object implements \Magento\Framework\Bac
                 $this->_getFilePath(),
                 $mode
             );
-        } catch (\Magento\Framework\Filesystem\FilesystemException $e) {
+        } catch (\Magento\Framework\Exception\FileSystemException $e) {
             throw new \Magento\Framework\Backup\Exception\NotEnoughPermissions(
                 __('Sorry, but we cannot read from or write to backup file "%1".', $this->getFileName())
             );
@@ -312,12 +313,12 @@ class Backup extends \Magento\Framework\Object implements \Magento\Framework\Bac
      * Get zlib handler
      *
      * @return \Magento\Framework\Filesystem\File\WriteInterface
-     * @throws \Magento\Backup\Exception
+     * @throws \Magento\Framework\Exception\InputException
      */
     protected function _getStream()
     {
-        if (is_null($this->_stream)) {
-            throw new \Magento\Backup\Exception(__('The backup file handler was unspecified.'));
+        if ($this->_stream === null) {
+            throw new \Magento\Framework\Exception\InputException(__('The backup file handler was unspecified.'));
         }
         return $this->_stream;
     }
@@ -348,14 +349,14 @@ class Backup extends \Magento\Framework\Object implements \Magento\Framework\Bac
      *
      * @param string $string
      * @return $this
-     * @throws \Magento\Backup\Exception
+     * @throws \Magento\Framework\Exception\InputException
      */
     public function write($string)
     {
         try {
             $this->_getStream()->write($string);
-        } catch (\Magento\Framework\Filesystem\FilesystemException $e) {
-            throw new \Magento\Backup\Exception(
+        } catch (\Magento\Framework\Exception\FileSystemException $e) {
+            throw new \Magento\Framework\Exception\InputException(
                 __('Something went wrong writing to the backup file "%1".', $this->getFileName())
             );
         }
@@ -379,7 +380,7 @@ class Backup extends \Magento\Framework\Object implements \Magento\Framework\Bac
     /**
      * Print output
      *
-     * @return void
+     * @return string
      */
     public function output()
     {
@@ -391,7 +392,7 @@ class Backup extends \Magento\Framework\Object implements \Magento\Framework\Bac
         $directory = $this->_filesystem->getDirectoryWrite(DirectoryList::VAR_DIR);
         $directory = $directory->readFile($this->_getFilePath());
 
-        echo $directory;
+        return $directory;
     }
 
     /**
@@ -399,7 +400,7 @@ class Backup extends \Magento\Framework\Object implements \Magento\Framework\Bac
      */
     public function getSize()
     {
-        if (!is_null($this->getData('size'))) {
+        if ($this->getData('size') !== null) {
             return $this->getData('size');
         }
 

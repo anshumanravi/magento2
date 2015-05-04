@@ -9,25 +9,6 @@ namespace Magento\Search\Controller\Adminhtml\Term;
 class Save extends \Magento\Search\Controller\Adminhtml\Term
 {
     /**
-     * @var \Magento\Backend\Model\View\Result\RedirectFactory
-     */
-    protected $resultRedirectFactory;
-
-    /**
-     * @param \Magento\Backend\App\Action\Context $context
-     * @param \Magento\Framework\View\Result\PageFactory $resultPageFactory
-     * @param \Magento\Backend\Model\View\Result\RedirectFactory $resultRedirectFactory
-     */
-    public function __construct(
-        \Magento\Backend\App\Action\Context $context,
-        \Magento\Framework\View\Result\PageFactory $resultPageFactory,
-        \Magento\Backend\Model\View\Result\RedirectFactory $resultRedirectFactory
-    ) {
-        parent::__construct($context, $resultPageFactory);
-        $this->resultRedirectFactory = $resultRedirectFactory;
-    }
-
-    /**
      * Save search query
      *
      * @return \Magento\Backend\Model\View\Result\Redirect
@@ -53,7 +34,7 @@ class Save extends \Magento\Search\Controller\Adminhtml\Term
                     $model->setStoreId($storeId);
                     $model->loadByQueryText($queryText);
                     if ($model->getId() && $model->getId() != $queryId) {
-                        throw new \Magento\Framework\Model\Exception(
+                        throw new \Magento\Framework\Exception\LocalizedException(
                             __('You already have an identical search term query.')
                         );
                     } elseif (!$model->getId() && $queryId) {
@@ -67,7 +48,7 @@ class Save extends \Magento\Search\Controller\Adminhtml\Term
                 $model->setIsProcessed(0);
                 $model->save();
                 $this->messageManager->addSuccess(__('You saved the search term.'));
-            } catch (\Magento\Framework\Model\Exception $e) {
+            } catch (\Magento\Framework\Exception\LocalizedException $e) {
                 $this->messageManager->addError($e->getMessage());
                 $hasError = true;
             } catch (\Exception $e) {

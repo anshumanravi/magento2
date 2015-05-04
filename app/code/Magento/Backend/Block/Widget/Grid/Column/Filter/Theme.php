@@ -44,7 +44,7 @@ class Theme extends \Magento\Backend\Block\Widget\Grid\Column\Filter\AbstractFil
             array_unshift($options, ['value' => '', 'label' => '']);
         }
         $html = sprintf(
-            '<select name="%s" id="%s" class="no-changes" %s>%s</select>',
+            '<select name="%s" id="%s" class="admin__control-select no-changes" %s>%s</select>',
             $this->_getHtmlName(),
             $this->_getHtmlId(),
             $this->getUiId('filter', $this->_getHtmlName()),
@@ -94,7 +94,7 @@ class Theme extends \Magento\Backend\Block\Widget\Grid\Column\Filter\AbstractFil
                     $option['value']
                 ) . '</optgroup>';
             } else {
-                $selected = $option['value'] == $value && !is_null($value) ? ' selected="selected"' : '';
+                $selected = $option['value'] == $value && $value !== null ? ' selected="selected"' : '';
                 $html .= '<option value="' . $option['value'] . '"' . $selected . '>' . $option['label'] . '</option>';
             }
         }
@@ -109,7 +109,7 @@ class Theme extends \Magento\Backend\Block\Widget\Grid\Column\Filter\AbstractFil
      */
     public function getCondition()
     {
-        if (is_null($this->getValue())) {
+        if ($this->getValue() === null) {
             return null;
         }
         $value = $this->getValue();

@@ -5,7 +5,7 @@
  * See COPYING.txt for license details.
  */
 -->
-<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../Core/etc/config.xsd">
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../Store/etc/config.xsd">
     <default>
         <checkout>
             <options>
@@ -21,7 +21,7 @@
             </cart_link>
             <sidebar>
                 <display>1</display>
-                <count>3</count>
+                <count>5</count>
             </sidebar>
             <payment_failed>
                 <identity>general</identity>

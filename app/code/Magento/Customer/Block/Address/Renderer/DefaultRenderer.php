@@ -5,7 +5,7 @@
  */
 namespace Magento\Customer\Block\Address\Renderer;
 
-use Magento\Customer\Model\Address\AbstractAddress;
+use Magento\Customer\Model\Address\AddressModelInterface;
 use Magento\Customer\Model\Address\Mapper;
 use Magento\Customer\Model\Metadata\ElementFactory;
 use Magento\Framework\View\Element\AbstractBlock;
@@ -47,7 +47,7 @@ class DefaultRenderer extends AbstractBlock implements RendererInterface
      *
      * @param \Magento\Framework\View\Element\Context $context
      * @param ElementFactory $elementFactory
-     * @param \Magento\Directory\Model\CountryFactory $countryFactory ,
+     * @param \Magento\Directory\Model\CountryFactory $countryFactory
      * @param \Magento\Customer\Api\AddressMetadataInterface $metadataService
      * @param Mapper $addressMapper
      * @param array $data
@@ -97,9 +97,8 @@ class DefaultRenderer extends AbstractBlock implements RendererInterface
      */
     public function getFormat(AbstractAddress $address = null)
     {
-        $countryFormat = is_null(
-            $address
-        ) ? false : $address->getCountryModel()->getFormat(
+        $countryFormat = $address === null
+        ? false : $address->getCountryModel()->getFormat(
             $this->getType()->getCode()
         );
         $format = $countryFormat ? $countryFormat->getFormat() : $this->getType()->getDefaultFormat();
@@ -112,7 +111,7 @@ class DefaultRenderer extends AbstractBlock implements RendererInterface
      * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      * @SuppressWarnings(PHPMD.NPathComplexity)
      */
-    public function render(AbstractAddress $address, $format = null)
+    public function render(AddressModelInterface $address, $format = null)
     {
         $address = $address->getDataModel(0, 0);
         return $this->renderArray($this->addressMapper->toFlatArray($address), $format);
@@ -189,7 +188,7 @@ class DefaultRenderer extends AbstractBlock implements RendererInterface
                 $data[$key] = $this->escapeHtml($value);
             }
         }
-        $format = !is_null($format) ? $format : $this->getFormatArray($addressAttributes);
+        $format = $format !== null ? $format : $this->getFormatArray($addressAttributes);
         return $this->filterManager->template($format, ['variables' => $data]);
     }
 }

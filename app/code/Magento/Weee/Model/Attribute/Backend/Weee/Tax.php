@@ -5,7 +5,7 @@
  */
 namespace Magento\Weee\Model\Attribute\Backend\Weee;
 
-use Magento\Framework\Model\Exception;
+use Magento\Framework\Exception\LocalizedException;
 
 class Tax extends \Magento\Catalog\Model\Product\Attribute\Backend\Price
 {
@@ -59,7 +59,7 @@ class Tax extends \Magento\Catalog\Model\Product\Attribute\Backend\Price
      *
      * @param   \Magento\Catalog\Model\Product $object
      * @return  $this
-     * @throws  Exception
+     * @throws  \Magento\Framework\Exception\LocalizedException
      */
     public function validate($object)
     {
@@ -74,11 +74,11 @@ class Tax extends \Magento\Catalog\Model\Product\Attribute\Backend\Price
                 continue;
             }
 
-            $state = isset($tax['state']) ? $tax['state'] : '*';
+            $state = isset($tax['state']) ? $tax['state'] : '0';
             $key1 = implode('-', [$tax['website_id'], $tax['country'], $state]);
 
             if (!empty($dup[$key1])) {
-                throw new Exception(
+                throw new LocalizedException(
                     __('We found a duplicate of website, country and state fields for a fixed product tax')
                 );
             }
@@ -118,6 +118,8 @@ class Tax extends \Magento\Catalog\Model\Product\Attribute\Backend\Price
 
     /**
      * {@inheritdoc}
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+     * @SuppressWarnings(PHPMD.NPathComplexity)
      */
     public function afterSave($object)
     {
@@ -135,21 +137,17 @@ class Tax extends \Magento\Catalog\Model\Product\Attribute\Backend\Price
         }
 
         foreach ($taxes as $tax) {
-            if (empty($tax['price']) || empty($tax['country']) || !empty($tax['delete'])) {
+            if ((empty($tax['price']) && empty($tax['value'])) || empty($tax['country']) || !empty($tax['delete'])) {
                 continue;
             }
 
-            if (isset($tax['state']) && $tax['state']) {
-                $state = $tax['state'];
-            } else {
-                $state = '0';
-            }
+            $state = isset($tax['state']) ? $tax['state'] : '0';
 
             $data = [];
             $data['website_id'] = $tax['website_id'];
             $data['country'] = $tax['country'];
             $data['state'] = $state;
-            $data['value'] = $tax['price'];
+            $data['value'] = !empty($tax['price']) ? $tax['price'] : $tax['value'];
             $data['attribute_id'] = $this->getAttribute()->getId();
 
             $this->_attributeTax->insertProductData($object, $data);

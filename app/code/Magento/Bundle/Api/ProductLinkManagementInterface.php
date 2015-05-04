@@ -11,17 +11,18 @@ interface ProductLinkManagementInterface
     /**
      * Get all children for Bundle product
      *
-     * @param string $productId
+     * @param string $productSku
+     * @param int $optionId
      * @return \Magento\Bundle\Api\Data\LinkInterface[]
      * @throws \Magento\Framework\Exception\NoSuchEntityException
-     * @throws \Magento\Webapi\Exception
+     * @throws \Magento\Framework\Exception\InputException
      */
-    public function getChildren($productId);
+    public function getChildren($productSku, $optionId = null);
 
     /**
      * Add child product to specified Bundle option by product sku
      *
-     * @param string $productSku
+     * @param string $sku
      * @param int $optionId
      * @param \Magento\Bundle\Api\Data\LinkInterface $linkedProduct
      * @throws \Magento\Framework\Exception\NoSuchEntityException
@@ -29,12 +30,25 @@ interface ProductLinkManagementInterface
      * @throws \Magento\Framework\Exception\InputException
      * @return int
      */
-    public function addChildByProductSku($productSku, $optionId, \Magento\Bundle\Api\Data\LinkInterface $linkedProduct);
+    public function addChildByProductSku($sku, $optionId, \Magento\Bundle\Api\Data\LinkInterface $linkedProduct);
+
+    /**
+     * @param string $sku
+     * @param \Magento\Bundle\Api\Data\LinkInterface $linkedProduct
+     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     * @throws \Magento\Framework\Exception\CouldNotSaveException
+     * @throws \Magento\Framework\Exception\InputException
+     * @return bool
+     */
+    public function saveChild(
+        $sku,
+        \Magento\Bundle\Api\Data\LinkInterface $linkedProduct
+    );
 
     /**
      * @param \Magento\Catalog\Api\Data\ProductInterface $product
      * @param int $optionId
-     * @param Data\LinkInterface $linkedProduct
+     * @param \Magento\Bundle\Api\Data\LinkInterface $linkedProduct
      * @throws \Magento\Framework\Exception\NoSuchEntityException
      * @throws \Magento\Framework\Exception\CouldNotSaveException
      * @throws \Magento\Framework\Exception\InputException
@@ -49,12 +63,12 @@ interface ProductLinkManagementInterface
     /**
      * Remove product from Bundle product option
      *
-     * @param string $productSku
+     * @param string $sku
      * @param int $optionId
      * @param string $childSku
      * @throws \Magento\Framework\Exception\NoSuchEntityException
-     * @throws \Magento\Webapi\Exception
+     * @throws \Magento\Framework\Exception\InputException
      * @return bool
      */
-    public function removeChild($productSku, $optionId, $childSku);
+    public function removeChild($sku, $optionId, $childSku);
 }

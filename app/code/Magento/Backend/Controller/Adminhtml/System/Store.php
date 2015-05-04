@@ -37,11 +37,6 @@ class Store extends Action
     protected $resultForwardFactory;
 
     /**
-     * @var \Magento\Backend\Model\View\Result\RedirectFactory
-     */
-    protected $resultRedirectFactory;
-
-    /**
      * @var \Magento\Framework\View\Result\PageFactory
      */
     protected $resultPageFactory;
@@ -51,7 +46,6 @@ class Store extends Action
      * @param \Magento\Framework\Registry $coreRegistry
      * @param \Magento\Framework\Filter\FilterManager $filterManager
      * @param \Magento\Backend\Model\View\Result\ForwardFactory $resultForwardFactory
-     * @param \Magento\Backend\Model\View\Result\RedirectFactory $resultRedirectFactory
      * @param \Magento\Framework\View\Result\PageFactory $resultPageFactory
      */
     public function __construct(
@@ -59,14 +53,12 @@ class Store extends Action
         \Magento\Framework\Registry $coreRegistry,
         \Magento\Framework\Filter\FilterManager $filterManager,
         \Magento\Backend\Model\View\Result\ForwardFactory $resultForwardFactory,
-        \Magento\Backend\Model\View\Result\RedirectFactory $resultRedirectFactory,
         \Magento\Framework\View\Result\PageFactory $resultPageFactory
     ) {
         $this->_coreRegistry = $coreRegistry;
         $this->filterManager = $filterManager;
         parent::__construct($context);
         $this->resultForwardFactory = $resultForwardFactory;
-        $this->resultRedirectFactory = $resultRedirectFactory;
         $this->resultPageFactory = $resultPageFactory;
     }
 
@@ -115,7 +107,7 @@ class Store extends Action
                 ->setPath($filesystem->getDirectoryRead(DirectoryList::VAR_DIR)->getAbsolutePath('backups'));
             $backupDb->createBackup($backup);
             $this->messageManager->addSuccess(__('The database was backed up.'));
-        } catch (\Magento\Framework\Model\Exception $e) {
+        } catch (\Magento\Framework\Exception\LocalizedException $e) {
             $this->messageManager->addError($e->getMessage());
             return false;
         } catch (\Exception $e) {

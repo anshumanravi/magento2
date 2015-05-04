@@ -57,25 +57,25 @@ class CreateSimpleProductEntityTest extends Injectable
     /**
      * Run create product simple entity test.
      *
-     * @param string $configData
      * @param CatalogProductSimple $product
      * @param Category $category
      * @param CatalogProductIndex $productGrid
      * @param CatalogProductNew $newProductPage
+     * @param string $configData
      * @return array
      */
     public function testCreate(
-        $configData,
         CatalogProductSimple $product,
         Category $category,
         CatalogProductIndex $productGrid,
-        CatalogProductNew $newProductPage
+        CatalogProductNew $newProductPage,
+        $configData = null
     ) {
         $this->configData = $configData;
 
         // Preconditions
         $this->objectManager->create(
-            'Magento\Core\Test\TestStep\SetupConfigurationStep',
+            'Magento\Config\Test\TestStep\SetupConfigurationStep',
             ['configData' => $this->configData]
         )->run();
 
@@ -96,7 +96,7 @@ class CreateSimpleProductEntityTest extends Injectable
     public function tearDown()
     {
         $this->objectManager->create(
-            'Magento\Core\Test\TestStep\SetupConfigurationStep',
+            'Magento\Config\Test\TestStep\SetupConfigurationStep',
             ['configData' => $this->configData, 'rollback' => true]
         )->run();
     }

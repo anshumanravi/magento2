@@ -18,10 +18,6 @@ use Magento\Mtf\Fixture\InjectableFixture;
  */
 class AssertAddToCartButtonPresent extends AbstractConstraint
 {
-    /* tags */
-    const SEVERITY = 'low';
-    /* end tags */
-
     /**
      * Assert that "Add to cart" button is present on page.
      *
@@ -44,9 +40,9 @@ class AssertAddToCartButtonPresent extends AbstractConstraint
         $categoryName = $category === null ? $product->getCategoryIds()[0] : $category->getName();
         $cmsIndex->getTopmenu()->selectCategoryByName($categoryName);
 
-        $isProductVisible = $catalogCategoryView->getListProductBlock()->isProductVisible($product->getName());
+        $isProductVisible = $catalogCategoryView->getListProductBlock()->getProductItem($product)->isVisible();
         while (!$isProductVisible && $catalogCategoryView->getBottomToolbar()->nextPage()) {
-            $isProductVisible = $catalogCategoryView->getListProductBlock()->isProductVisible($product->getName());
+            $isProductVisible = $catalogCategoryView->getListProductBlock()->getProductItem($product)->isVisible();
         }
         \PHPUnit_Framework_Assert::assertTrue($isProductVisible, 'Product is absent on category page.');
 
@@ -55,7 +51,7 @@ class AssertAddToCartButtonPresent extends AbstractConstraint
             "Button 'Add to Card' is absent on Category page."
         );
 
-        $catalogCategoryView->getListProductBlock()->openProductViewPage($product->getName());
+        $catalogCategoryView->getListProductBlock()->getProductItem($product)->open();
         \PHPUnit_Framework_Assert::assertTrue(
             $catalogProductView->getViewBlock()->isVisibleAddToCardButton(),
             "Button 'Add to Card' is absent on Product page."

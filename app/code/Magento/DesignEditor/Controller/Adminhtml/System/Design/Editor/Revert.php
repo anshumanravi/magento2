@@ -6,7 +6,7 @@
  */
 namespace Magento\DesignEditor\Controller\Adminhtml\System\Design\Editor;
 
-use Magento\Framework\Model\Exception as CoreException;
+use Magento\Framework\Exception\LocalizedException as CoreException;
 use Magento\Framework\View\Design\ThemeInterface;
 
 class Revert extends \Magento\DesignEditor\Controller\Adminhtml\System\Design\Editor
@@ -44,15 +44,17 @@ class Revert extends \Magento\DesignEditor\Controller\Adminhtml\System\Design\Ed
                     break;
 
                 default:
-                    throw new \Magento\Framework\Exception('Invalid revert mode "%s"', $revertTo);
+                    throw new \Magento\Framework\Exception\LocalizedException(
+                        __('Invalid revert mode "%1"', $revertTo)
+                    );
             }
             $response = ['message' => $message];
         } catch (\Exception $e) {
             $this->_objectManager->get('Psr\Log\LoggerInterface')->critical($e);
             $response = ['error' => true, 'message' => __('Unknown error')];
         }
-        /** @var $coreHelper \Magento\Core\Helper\Data */
-        $coreHelper = $this->_objectManager->get('Magento\Core\Helper\Data');
-        $this->getResponse()->representJson($coreHelper->jsonEncode($response));
+        /** @var $jsonHelper \Magento\Framework\Json\Helper\Data */
+        $jsonHelper = $this->_objectManager->get('Magento\Framework\Json\Helper\Data');
+        $this->getResponse()->representJson($jsonHelper->jsonEncode($response));
     }
 }

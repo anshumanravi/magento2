@@ -79,7 +79,7 @@ class Reader
      *
      * @return array
      *
-     * @throws \Magento\Framework\Exception
+     * @throws \Magento\Framework\Exception\LocalizedException
      */
     public function read()
     {
@@ -99,14 +99,16 @@ class Reader
         $domDocument = null;
         foreach ($fileList as $file) {
             try {
-                if (is_null($domDocument)) {
+                if ($domDocument === null) {
                     $class = $this->_domDocumentClass;
                     $domDocument = new $class($file, [], null, $this->_schemaFile);
                 } else {
                     $domDocument->merge($file);
                 }
             } catch (\Magento\Framework\Config\Dom\ValidationException $e) {
-                throw new \Magento\Framework\Exception("Invalid XML in file " . $file . ":\n" . $e->getMessage());
+                throw new \Magento\Framework\Exception\LocalizedException(
+                    new \Magento\Framework\Phrase("Invalid XML in file %1:\n%2", [$file, $e->getMessage()])
+                );
             }
         }
 

@@ -25,7 +25,12 @@ class Price extends \Magento\Catalog\Model\Product\Type\Price
      * @param \Magento\Framework\Event\ManagerInterface $eventManager
      * @param PriceCurrencyInterface $priceCurrency
      * @param \Magento\Customer\Api\GroupManagementInterface $groupManagement
+     * @param \Magento\Catalog\Api\Data\ProductGroupPriceInterfaceFactory $groupPriceFactory
+     * @param \Magento\Catalog\Api\Data\ProductTierPriceInterfaceFactory $tierPriceFactory
+     * @param \Magento\Framework\App\Config\ScopeConfigInterface $config
      * @param PriceModifierInterface $priceModifier
+     *
+     * @SuppressWarnings(PHPMD.ExcessiveParameterList)
      */
     public function __construct(
         \Magento\CatalogRule\Model\Resource\RuleFactory $ruleFactory,
@@ -35,6 +40,9 @@ class Price extends \Magento\Catalog\Model\Product\Type\Price
         \Magento\Framework\Event\ManagerInterface $eventManager,
         PriceCurrencyInterface $priceCurrency,
         \Magento\Customer\Api\GroupManagementInterface $groupManagement,
+        \Magento\Catalog\Api\Data\ProductGroupPriceInterfaceFactory $groupPriceFactory,
+        \Magento\Catalog\Api\Data\ProductTierPriceInterfaceFactory $tierPriceFactory,
+        \Magento\Framework\App\Config\ScopeConfigInterface $config,
         PriceModifierInterface $priceModifier
     ) {
         $this->priceModifier = $priceModifier;
@@ -45,7 +53,10 @@ class Price extends \Magento\Catalog\Model\Product\Type\Price
             $customerSession,
             $eventManager,
             $priceCurrency,
-            $groupManagement
+            $groupManagement,
+            $groupPriceFactory,
+            $tierPriceFactory,
+            $config
         );
     }
 
@@ -58,7 +69,7 @@ class Price extends \Magento\Catalog\Model\Product\Type\Price
      */
     public function getFinalPrice($qty, $product)
     {
-        if (is_null($qty) && !is_null($product->getCalculatedFinalPrice())) {
+        if ($qty === null && $product->getCalculatedFinalPrice() !== null) {
             return $product->getCalculatedFinalPrice();
         }
 
